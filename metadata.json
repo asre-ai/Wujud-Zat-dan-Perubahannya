@@ -1,0 +1,6 @@
+{
+  "name": "Wujud Zat & Perubahannya - Media Pembelajaran 3D SD",
+  "description": "Website pembelajaran 3D interaktif untuk siswa Sekolah Dasar tentang wujud zat (padat, cair, gas), perubahan wujud zat, simulasi partikel, eksperimen laboratorium, dan kuis interaktif.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
