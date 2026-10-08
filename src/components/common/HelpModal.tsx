@@ -32,74 +32,74 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, progress 
             💡
           </div>
           <div>
-            <h3 className="text-xl font-extrabold text-slate-900 font-heading">
+            <h3 className="text-xl font-black text-slate-950 font-heading">
               Petunjuk Belajar 3D
             </h3>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-slate-800 font-bold">
               Panduan interaksi dan eksplorasi seru untuk siswa
             </p>
           </div>
         </div>
 
         {/* Tips List */}
-        <div className="space-y-3.5 mb-6 text-sm text-slate-700">
-          <div className="flex items-start gap-3 p-3 rounded-2xl bg-sky-50/70 border border-sky-100">
-            <MousePointer className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
+        <div className="space-y-3.5 mb-6 text-sm text-slate-900">
+          <div className="flex items-start gap-3 p-3 rounded-2xl bg-sky-50 border-2 border-sky-200">
+            <MousePointer className="w-5 h-5 text-sky-700 shrink-0 mt-0.5 stroke-[2.5]" />
             <div>
-              <strong className="text-slate-900 block font-bold text-xs uppercase tracking-wide">
+              <strong className="text-slate-950 block font-black text-xs uppercase tracking-wide">
                 Putar Objek 3D
               </strong>
-              <span>Klik dan seret (drag) menggunakan mouse atau jari di layar untuk melihat benda dari segala sisi.</span>
+              <span className="font-bold">Klik dan seret (drag) menggunakan mouse atau jari di layar untuk melihat benda dari segala sisi.</span>
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3 rounded-2xl bg-indigo-50/70 border border-indigo-100">
-            <ZoomIn className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-3 rounded-2xl bg-indigo-50 border-2 border-indigo-200">
+            <ZoomIn className="w-5 h-5 text-indigo-700 shrink-0 mt-0.5 stroke-[2.5]" />
             <div>
-              <strong className="text-slate-900 block font-bold text-xs uppercase tracking-wide">
+              <strong className="text-slate-950 block font-black text-xs uppercase tracking-wide">
                 Perbesar & Perkecil
               </strong>
-              <span>Gunakan roda putar mouse (scroll) atau tombol 🔍 untuk mengamati bagian lebih detail.</span>
+              <span className="font-bold">Gunakan roda putar mouse (scroll) atau tombol 🔍 untuk mengamati bagian lebih detail.</span>
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3 rounded-2xl bg-teal-50/70 border border-teal-100">
-            <Sparkles className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-3 rounded-2xl bg-teal-50 border-2 border-teal-200">
+            <Sparkles className="w-4 h-4 text-teal-700 shrink-0 mt-0.5 stroke-[2.5]" />
             <div>
-              <strong className="text-slate-900 block font-bold text-xs uppercase tracking-wide">
+              <strong className="text-slate-950 block font-black text-xs uppercase tracking-wide">
                 Tombol "Lihat Partikelnya!"
               </strong>
-              <span>Klik tombol ini untuk melihat rahasia molekul kecil penyusun benda padat, cair, dan gas!</span>
+              <span className="font-bold">Klik tombol ini untuk melihat rahasia molekul kecil penyusun benda padat, cair, dan gas!</span>
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3 rounded-2xl bg-amber-50/70 border border-amber-100">
-            <Flame className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-3 rounded-2xl bg-amber-50 border-2 border-amber-200">
+            <Flame className="w-5 h-5 text-amber-700 shrink-0 mt-0.5 stroke-[2.5]" />
             <div>
-              <strong className="text-slate-900 block font-bold text-xs uppercase tracking-wide">
+              <strong className="text-slate-950 block font-black text-xs uppercase tracking-wide">
                 Eksperimen Laboratorium
               </strong>
-              <span>Nyalakan pemanas atau pendingin untuk menyaksikan perubahan wujud nyata dengan termometer langsung.</span>
+              <span className="font-bold">Nyalakan pemanas atau pendingin untuk menyaksikan perubahan wujud nyata dengan termometer langsung.</span>
             </div>
           </div>
         </div>
 
         {/* Learning Progress Snapshot */}
-        <div className="border-t border-slate-100 pt-4">
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+        <div className="border-t-2 border-slate-200 pt-4">
+          <div className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2">
             Status Perjalanan Belajarmu:
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-semibold">
-            <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${progress.visitedStates ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
-              <CheckCircle2 className={`w-3.5 h-3.5 ${progress.visitedStates ? 'text-emerald-600' : 'text-slate-300'}`} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-black">
+            <div className={`p-2 rounded-xl border-2 flex items-center gap-1.5 ${progress.visitedStates ? 'bg-emerald-50 text-emerald-950 border-emerald-300' : 'bg-slate-100 text-slate-700 border-slate-300'}`}>
+              <CheckCircle2 className={`w-3.5 h-3.5 stroke-[2.5] ${progress.visitedStates ? 'text-emerald-700' : 'text-slate-400'}`} />
               <span>Wujud Zat</span>
             </div>
-            <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${progress.visitedLab ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
-              <CheckCircle2 className={`w-3.5 h-3.5 ${progress.visitedLab ? 'text-emerald-600' : 'text-slate-300'}`} />
+            <div className={`p-2 rounded-xl border-2 flex items-center gap-1.5 ${progress.visitedLab ? 'bg-emerald-50 text-emerald-950 border-emerald-300' : 'bg-slate-100 text-slate-700 border-slate-300'}`}>
+              <CheckCircle2 className={`w-3.5 h-3.5 stroke-[2.5] ${progress.visitedLab ? 'text-emerald-700' : 'text-slate-400'}`} />
               <span>Laboratorium</span>
             </div>
-            <div className={`p-2 rounded-xl border flex items-center gap-1.5 ${progress.visitedTransitions ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
-              <CheckCircle2 className={`w-3.5 h-3.5 ${progress.visitedTransitions ? 'text-emerald-600' : 'text-slate-300'}`} />
+            <div className={`p-2 rounded-xl border-2 flex items-center gap-1.5 ${progress.visitedTransitions ? 'bg-emerald-50 text-emerald-950 border-emerald-300' : 'bg-slate-100 text-slate-700 border-slate-300'}`}>
+              <CheckCircle2 className={`w-3.5 h-3.5 stroke-[2.5] ${progress.visitedTransitions ? 'text-emerald-700' : 'text-slate-400'}`} />
               <span>Perubahan</span>
             </div>
           </div>

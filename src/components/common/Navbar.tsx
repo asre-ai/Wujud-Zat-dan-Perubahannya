@@ -35,29 +35,29 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navThemeMap: Record<NavPage, { active: string; inactive: string }> = {
     home: {
-      active: 'bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-2 ring-blue-300 scale-[1.02] border-b-2 border-blue-800',
-      inactive: 'bg-blue-50/95 hover:bg-blue-100 text-blue-900 border-2 border-blue-300 border-b-4 border-b-blue-400 active:border-b-2 shadow-2xs',
+      active: 'bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-2 ring-blue-300 scale-[1.02] border-b-2 border-blue-800 font-black',
+      inactive: 'bg-white/95 hover:bg-blue-50 text-blue-950 border-2 border-blue-300 border-b-4 border-b-blue-500 active:border-b-2 shadow-2xs font-extrabold',
     },
     states: {
-      active: 'bg-sky-500 text-white shadow-md shadow-sky-500/30 ring-2 ring-sky-300 scale-[1.02] border-b-2 border-sky-700',
-      inactive: 'bg-sky-50/95 hover:bg-sky-100 text-sky-900 border-2 border-sky-300 border-b-4 border-b-sky-400 active:border-b-2 shadow-2xs',
+      active: 'bg-sky-600 text-white shadow-md shadow-sky-600/30 ring-2 ring-sky-300 scale-[1.02] border-b-2 border-sky-800 font-black',
+      inactive: 'bg-white/95 hover:bg-sky-50 text-sky-950 border-2 border-sky-300 border-b-4 border-b-sky-500 active:border-b-2 shadow-2xs font-extrabold',
     },
     lab: {
-      active: 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-300 scale-[1.02] border-b-2 border-emerald-800',
-      inactive: 'bg-emerald-50/95 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-300 border-b-4 border-b-emerald-400 active:border-b-2 shadow-2xs',
+      active: 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-300 scale-[1.02] border-b-2 border-emerald-800 font-black',
+      inactive: 'bg-white/95 hover:bg-emerald-50 text-emerald-950 border-2 border-emerald-300 border-b-4 border-b-emerald-500 active:border-b-2 shadow-2xs font-extrabold',
     },
     transitions: {
-      active: 'bg-purple-600 text-white shadow-md shadow-purple-600/30 ring-2 ring-purple-300 scale-[1.02] border-b-2 border-purple-800',
-      inactive: 'bg-purple-50/95 hover:bg-purple-100 text-purple-900 border-2 border-purple-300 border-b-4 border-b-purple-400 active:border-b-2 shadow-2xs',
+      active: 'bg-purple-600 text-white shadow-md shadow-purple-600/30 ring-2 ring-purple-300 scale-[1.02] border-b-2 border-purple-800 font-black',
+      inactive: 'bg-white/95 hover:bg-purple-50 text-purple-950 border-2 border-purple-300 border-b-4 border-b-purple-500 active:border-b-2 shadow-2xs font-extrabold',
     },
     quiz: {
-      active: 'bg-amber-500 text-white shadow-md shadow-amber-500/30 ring-2 ring-amber-300 scale-[1.02] border-b-2 border-amber-700',
-      inactive: 'bg-amber-50/95 hover:bg-amber-100 text-amber-950 border-2 border-amber-400 border-b-4 border-b-amber-500 active:border-b-2 shadow-2xs',
+      active: 'bg-amber-500 text-white shadow-md shadow-amber-500/30 ring-2 ring-amber-300 scale-[1.02] border-b-2 border-amber-700 font-black',
+      inactive: 'bg-white/95 hover:bg-amber-50 text-amber-950 border-2 border-amber-400 border-b-4 border-b-amber-500 active:border-b-2 shadow-2xs font-extrabold',
     },
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-slate-300/80 shadow-xs">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 h-14 sm:h-18 flex items-center justify-between gap-1.5 sm:gap-3">
         {/* Zone 1: Brand title wordmark (Target CSS selector 4) */}
         <button
@@ -71,10 +71,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             🧊
           </div>
           <div className="flex flex-col">
-            <span className="text-xs sm:text-xl font-extrabold text-slate-900 tracking-tight font-heading leading-tight group-hover:text-sky-600 transition-colors">
+            <span className="text-xs sm:text-xl font-black text-slate-950 tracking-tight font-heading leading-tight group-hover:text-sky-700 transition-colors">
               Zat 3D Edu
             </span>
-            <span className="text-[10px] sm:text-[11px] font-bold text-sky-600 hidden md:block">
+            <span className="text-[10px] sm:text-[11px] font-black text-sky-900 hidden md:block">
               Sains Sekolah Dasar
             </span>
           </div>

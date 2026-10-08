@@ -58,59 +58,59 @@ export const DeveloperModal: React.FC<DeveloperModalProps> = ({ isOpen, onClose 
             <span>Pengembang Media Pembelajaran</span>
           </div>
 
-          <h3 className="text-2xl font-black text-slate-900 font-heading">
+          <h3 className="text-2xl font-black text-slate-950 font-heading">
             Muhammad Asri
           </h3>
-          <p className="text-xs text-slate-500 font-semibold mt-0.5">
+          <p className="text-xs text-slate-800 font-bold mt-0.5">
             Website Pembelajaran 3D Wujud Zat & Perubahannya
           </p>
         </div>
 
         {/* Information Cards List */}
-        <div className="space-y-3 mb-6 text-sm text-slate-700">
+        <div className="space-y-3 mb-6 text-sm text-slate-900">
           {/* University */}
-          <div className="flex items-center gap-3 p-3 rounded-2xl bg-sky-50/80 border border-sky-100">
-            <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
-              <GraduationCap className="w-5 h-5" />
+          <div className="flex items-center gap-3 p-3 rounded-2xl bg-sky-50 border-2 border-sky-200">
+            <div className="w-10 h-10 rounded-xl bg-sky-200 text-sky-900 flex items-center justify-center shrink-0">
+              <GraduationCap className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-bold text-sky-900 uppercase tracking-wide block">
+              <span className="text-[11px] font-black text-sky-950 uppercase tracking-wide block">
                 Perguruan Tinggi
               </span>
-              <span className="font-extrabold text-slate-900 text-xs sm:text-sm truncate block">
+              <span className="font-black text-slate-950 text-xs sm:text-sm truncate block">
                 Universitas Lambung Mangkurat
               </span>
             </div>
           </div>
 
           {/* Location */}
-          <div className="flex items-center gap-3 p-3 rounded-2xl bg-teal-50/80 border border-teal-100">
-            <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
-              <MapPin className="w-5 h-5" />
+          <div className="flex items-center gap-3 p-3 rounded-2xl bg-teal-50 border-2 border-teal-200">
+            <div className="w-10 h-10 rounded-xl bg-teal-200 text-teal-900 flex items-center justify-center shrink-0">
+              <MapPin className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-bold text-teal-900 uppercase tracking-wide block">
+              <span className="text-[11px] font-black text-teal-950 uppercase tracking-wide block">
                 Asal Daerah
               </span>
-              <span className="font-extrabold text-slate-900 text-xs sm:text-sm truncate block">
+              <span className="font-black text-slate-950 text-xs sm:text-sm truncate block">
                 Banjarmasin - Indonesia
               </span>
             </div>
           </div>
 
           {/* Email */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-50/80 border border-amber-100 gap-2">
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-50 border-2 border-amber-200 gap-2">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-                <Mail className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-amber-200 text-amber-900 flex items-center justify-center shrink-0">
+                <Mail className="w-5 h-5 stroke-[2.5]" />
               </div>
               <div className="min-w-0">
-                <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wide block">
+                <span className="text-[11px] font-black text-amber-950 uppercase tracking-wide block">
                   Alamat Email
                 </span>
                 <a
                   href={`mailto:${email}`}
-                  className="font-extrabold text-slate-900 hover:text-amber-700 text-xs sm:text-sm truncate block transition-colors"
+                  className="font-black text-slate-950 hover:text-amber-800 text-xs sm:text-sm truncate block transition-colors"
                 >
                   {email}
                 </a>
@@ -118,10 +118,10 @@ export const DeveloperModal: React.FC<DeveloperModalProps> = ({ isOpen, onClose 
             </div>
             <button
               onClick={handleCopyEmail}
-              className="p-2 rounded-xl bg-white hover:bg-amber-100 border border-amber-200 text-amber-800 transition-colors shrink-0 cursor-pointer shadow-2xs"
+              className="p-2 rounded-xl bg-white hover:bg-amber-100 border-2 border-amber-300 text-amber-900 transition-colors shrink-0 cursor-pointer shadow-2xs"
               title="Salin Email"
             >
-              {copiedEmail ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+              {copiedEmail ? <Check className="w-4 h-4 text-emerald-600 stroke-[3]" /> : <Copy className="w-4 h-4" />}
             </button>
           </div>
 
@@ -130,22 +130,22 @@ export const DeveloperModal: React.FC<DeveloperModalProps> = ({ isOpen, onClose 
             href={instagramUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between p-3 rounded-2xl bg-purple-50/80 border border-purple-100 hover:bg-purple-100/70 transition-all gap-2 group cursor-pointer"
+            className="flex items-center justify-between p-3 rounded-2xl bg-purple-50 border-2 border-purple-200 hover:bg-purple-100 transition-all gap-2 group cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <Instagram className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-purple-200 text-purple-900 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Instagram className="w-5 h-5 stroke-[2.5]" />
               </div>
               <div className="min-w-0">
-                <span className="text-[11px] font-bold text-purple-900 uppercase tracking-wide block">
+                <span className="text-[11px] font-black text-purple-950 uppercase tracking-wide block">
                   Instagram
                 </span>
-                <span className="font-extrabold text-slate-900 text-xs sm:text-sm truncate block group-hover:text-purple-700 transition-colors">
+                <span className="font-black text-slate-950 text-xs sm:text-sm truncate block group-hover:text-purple-800 transition-colors">
                   {instagramHandle}
                 </span>
               </div>
             </div>
-            <div className="p-2 rounded-xl bg-white text-purple-700 border border-purple-200 group-hover:bg-purple-600 group-hover:text-white transition-colors shrink-0 shadow-2xs">
+            <div className="p-2 rounded-xl bg-white text-purple-900 border-2 border-purple-300 group-hover:bg-purple-600 group-hover:text-white transition-colors shrink-0 shadow-2xs">
               <ExternalLink className="w-4 h-4" />
             </div>
           </a>

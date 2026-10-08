@@ -587,7 +587,7 @@ export const LabExperiment3D: React.FC = () => {
   return (
     <div className="w-full flex flex-col gap-3 sm:gap-6">
       {/* 4 Experiment Switcher Tabs - Compact on Mobile */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-2 p-1 bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-2xs">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-2 p-1.5 bg-white/98 rounded-xl sm:rounded-2xl border-2 border-slate-300 shadow-sm">
         {(Object.keys(EXPERIMENTS) as LabExperimentId[]).map(id => {
           const exp = EXPERIMENTS[id];
           const isSelected = selectedExp === id;
@@ -595,10 +595,10 @@ export const LabExperiment3D: React.FC = () => {
             <button
               key={id}
               onClick={() => handleSelectExp(id)}
-              className={`py-1.5 px-2 sm:py-2 sm:px-2.5 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-1.5 text-[11px] sm:text-sm font-bold transition-all cursor-pointer ${
+              className={`py-1.5 px-2 sm:py-2 sm:px-2.5 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-1.5 text-[11px] sm:text-sm font-black transition-all cursor-pointer ${
                 isSelected
                   ? 'bg-sky-600 text-white shadow-xs shadow-sky-600/25 scale-[1.01]'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  : 'text-slate-900 hover:text-black hover:bg-slate-100'
               }`}
             >
               <span className="text-xs sm:text-sm">
@@ -664,43 +664,43 @@ export const LabExperiment3D: React.FC = () => {
         </div>
 
         {/* Experiment Controller & Step-by-Step Learning Card (5 cols on large) */}
-        <div className="lg:col-span-5 flex flex-col gap-2.5 sm:gap-3.5 bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm">
+        <div className="lg:col-span-5 flex flex-col gap-2.5 sm:gap-3.5 bg-white/98 p-3 sm:p-5 rounded-2xl sm:rounded-3xl border-2 border-slate-300 shadow-md">
           {/* Header info */}
           <div className="flex items-center justify-between gap-2">
             <div>
               <span
-                className={`inline-block px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold ${
+                className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black ${
                   currentExpMeta.mode === 'heat'
-                    ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                    : 'bg-sky-100 text-sky-800 border border-sky-300'
+                    ? 'bg-amber-100 text-amber-950 border-2 border-amber-300'
+                    : 'bg-sky-100 text-sky-950 border-2 border-sky-300'
                 }`}
               >
                 {currentExpMeta.mode === 'heat' ? '🔥 Menerima Panas' : '❄️ Melepaskan Panas'}
               </span>
-              <h3 className="text-base sm:text-xl font-extrabold text-slate-900 font-heading mt-0.5 sm:mt-1">
+              <h3 className="text-base sm:text-xl font-black text-slate-950 font-heading mt-0.5 sm:mt-1">
                 {currentExpMeta.title}
               </h3>
             </div>
-            <span className="text-[11px] sm:text-xs font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-100 text-slate-600 shrink-0">
+            <span className="text-[11px] sm:text-xs font-black px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-300 text-slate-900 shrink-0">
               {currentExpMeta.badge}
             </span>
           </div>
 
           {/* PRIMARY ACTION BUTTONS: Compact on mobile for better visibility */}
-          <div className="flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 bg-slate-50 rounded-xl sm:rounded-2xl border border-slate-200/70">
+          <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 bg-slate-50 rounded-xl sm:rounded-2xl border-2 border-slate-200">
             <button
               onClick={handleStartExperiment}
               disabled={isRunning}
-              className={`flex-1 py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-sm text-white flex items-center justify-center gap-1.5 sm:gap-2 shadow-xs transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer ${
+              className={`flex-1 py-2.5 px-3 sm:py-3 sm:px-4 rounded-lg sm:rounded-xl font-black text-[11px] sm:text-sm text-white flex items-center justify-center gap-1.5 sm:gap-2 shadow-xs transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer ${
                 currentExpMeta.mode === 'heat'
-                  ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/25'
-                  : 'bg-sky-600 hover:bg-sky-700 shadow-sky-600/25'
+                  ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/25 border-2 border-amber-400'
+                  : 'bg-sky-600 hover:bg-sky-700 shadow-sky-600/25 border-2 border-sky-400'
               }`}
             >
               {currentExpMeta.mode === 'heat' ? (
-                <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
               ) : (
-                <Snowflake className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <Snowflake className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
               )}
               <span>{progress >= 1 ? 'Mulai Ulang' : currentExpMeta.actionText}</span>
             </button>
@@ -708,20 +708,20 @@ export const LabExperiment3D: React.FC = () => {
             <button
               onClick={handleReset}
               title="Reset Eksperimen"
-              className="py-2 px-2.5 sm:py-2.5 sm:px-3 rounded-lg sm:rounded-xl font-semibold text-[11px] sm:text-sm text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 transition-colors flex items-center justify-center cursor-pointer shadow-2xs"
+              className="py-2.5 px-3 rounded-lg sm:rounded-xl font-black text-[11px] sm:text-sm text-slate-900 bg-white hover:bg-slate-100 border-2 border-slate-300 transition-colors flex items-center justify-center cursor-pointer shadow-2xs"
             >
-              <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
             </button>
           </div>
 
           {/* Explanation card */}
-          <div className="bg-sky-50/70 p-2.5 sm:p-3 rounded-xl border border-sky-100 flex items-start gap-2 sm:gap-2.5 text-xs">
-            <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-600 shrink-0 mt-0.5" />
+          <div className="bg-sky-50 p-2.5 sm:p-3 rounded-xl border-2 border-sky-200 flex items-start gap-2 sm:gap-2.5 text-xs">
+            <Info className="w-4 h-4 text-sky-800 shrink-0 mt-0.5 stroke-[2.5]" />
             <div>
-              <strong className="text-sky-900 font-bold uppercase tracking-wide block text-[10px] sm:text-xs">
+              <strong className="text-sky-950 font-black uppercase tracking-wide block text-[10px] sm:text-xs">
                 Konsep Sains:
               </strong>
-              <p className="font-medium text-slate-700 mt-0.5 leading-relaxed text-[11px] sm:text-xs">
+              <p className="font-bold text-slate-900 mt-0.5 leading-relaxed text-[11px] sm:text-xs">
                 {currentExpMeta.explanation}
               </p>
             </div>
@@ -729,7 +729,7 @@ export const LabExperiment3D: React.FC = () => {
 
           {/* Step-by-step checklist */}
           <div className="flex flex-col gap-1.5 text-xs">
-            <div className="font-bold uppercase text-slate-400 text-[10px] tracking-wider">
+            <div className="font-black uppercase text-slate-900 text-[10px] tracking-wider">
               Alur Eksperimen:
             </div>
 

@@ -8,6 +8,7 @@ import { NavPage, UserProgress } from './types';
 import { Navbar } from './components/common/Navbar';
 import { HelpModal } from './components/common/HelpModal';
 import { DeveloperModal } from './components/common/DeveloperModal';
+import { DynamicCartoonBackground } from './components/common/DynamicCartoonBackground';
 import { HomeView } from './components/views/HomeView';
 import { StatesView } from './components/views/StatesView';
 import { LabView } from './components/views/LabView';
@@ -68,40 +69,9 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-gradient-to-br from-sky-100/50 via-amber-50/30 to-indigo-100/40 text-slate-800 overflow-x-hidden">
-      {/* 1. Atmospheric Ambient Color Orbs */}
-      <div className="fixed top-0 left-[-5%] w-[450px] h-[450px] bg-gradient-to-br from-sky-400/20 to-teal-300/15 rounded-full blur-3xl pointer-events-none -z-10 animate-drift" />
-      <div className="fixed top-[20%] right-[-8%] w-[420px] h-[420px] bg-gradient-to-bl from-amber-300/20 to-orange-300/15 rounded-full blur-3xl pointer-events-none -z-10 animate-drift [animation-delay:4s]" />
-      <div className="fixed bottom-[10%] left-[10%] w-[500px] h-[500px] bg-gradient-to-tr from-purple-300/15 to-indigo-300/20 rounded-full blur-3xl pointer-events-none -z-10 animate-drift [animation-delay:8s]" />
-      <div className="fixed top-[50%] right-[25%] w-[350px] h-[350px] bg-gradient-to-r from-emerald-200/15 to-cyan-200/15 rounded-full blur-3xl pointer-events-none -z-10 animate-drift [animation-delay:6s]" />
-
-      {/* 2. Interactive Science Blueprint Dot Grid Pattern */}
-      <div className="fixed inset-0 science-grid-bg pointer-events-none opacity-50 -z-10" />
-
-      {/* 3. Playful Floating Science Icons in Background */}
-      <div className="fixed inset-0 pointer-events-none select-none -z-10 overflow-hidden">
-        <span className="absolute top-[14%] left-[6%] text-3xl opacity-20 animate-drift">
-          🧊
-        </span>
-        <span className="absolute top-[28%] right-[8%] text-3xl opacity-20 animate-drift [animation-delay:3s]">
-          💧
-        </span>
-        <span className="absolute top-[65%] left-[4%] text-3xl opacity-20 animate-drift [animation-delay:7s]">
-          ☁️
-        </span>
-        <span className="absolute top-[48%] right-[5%] text-2xl opacity-20 animate-drift [animation-delay:5s]">
-          ❄️
-        </span>
-        <span className="absolute bottom-[18%] left-[22%] text-2xl opacity-15 animate-drift [animation-delay:9s]">
-          ⚗️
-        </span>
-        <span className="absolute bottom-[22%] right-[15%] text-2xl opacity-15 animate-drift [animation-delay:2s]">
-          ⚛️
-        </span>
-        <span className="absolute top-[8%] right-[30%] text-2xl opacity-15 animate-drift [animation-delay:11s]">
-          🧪
-        </span>
-      </div>
+    <div className="relative min-h-screen flex flex-col text-slate-800 overflow-x-hidden selection:bg-amber-300 selection:text-amber-950">
+      {/* Dynamic Cartoon Background: Overlapping vibrant panels, paper planes, bold clouds & stars */}
+      <DynamicCartoonBackground />
 
       {/* Top Navbar */}
       <Navbar
@@ -113,19 +83,21 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-7xl mx-auto pt-4 sm:pt-6">
-        {currentPage === 'home' && (
-          <HomeView onNavigate={handleNavigate} progress={progress} />
-        )}
-        {currentPage === 'states' && <StatesView />}
-        {currentPage === 'lab' && <LabView />}
-        {currentPage === 'transitions' && <TransitionsView />}
-        {currentPage === 'quiz' && (
-          <QuizView
-            onNavigate={handleNavigate}
-            onUpdateProgress={handleUpdateProgress}
-          />
-        )}
+      <main className="flex-1 w-full max-w-7xl mx-auto pt-4 sm:pt-6 px-3 sm:px-6 pb-12">
+        <div key={currentPage} className="animate-storybook-slide w-full">
+          {currentPage === 'home' && (
+            <HomeView onNavigate={handleNavigate} progress={progress} />
+          )}
+          {currentPage === 'states' && <StatesView />}
+          {currentPage === 'lab' && <LabView />}
+          {currentPage === 'transitions' && <TransitionsView />}
+          {currentPage === 'quiz' && (
+            <QuizView
+              onNavigate={handleNavigate}
+              onUpdateProgress={handleUpdateProgress}
+            />
+          )}
+        </div>
       </main>
 
       {/* Educational Simple Footer */}

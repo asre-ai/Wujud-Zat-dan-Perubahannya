@@ -659,7 +659,7 @@ export const Matter3DViewer: React.FC<Matter3DViewerProps> = ({
 
   return (
     <div
-      className={`relative w-full h-full min-h-[380px] rounded-3xl overflow-hidden bg-gradient-to-b from-sky-100/80 via-white/50 to-indigo-100/70 border-2 border-sky-200/90 shadow-md flex flex-col backdrop-blur-xs ${
+      className={`relative w-full h-full min-h-[340px] sm:min-h-[440px] rounded-3xl overflow-hidden bg-gradient-to-b from-sky-100/80 via-white/50 to-indigo-100/70 border-2 border-sky-200/90 shadow-md flex flex-col backdrop-blur-xs ${
         isFullscreen ? 'fixed inset-0 z-50 rounded-none bg-slate-900' : ''
       }`}
     >

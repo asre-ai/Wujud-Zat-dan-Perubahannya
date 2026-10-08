@@ -76,13 +76,13 @@ export const TransitionsView: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-20 flex flex-col gap-12">
       {/* Header section */}
       <div className="text-center max-w-3xl mx-auto mt-4">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-100 text-indigo-900 text-xs font-bold mb-3">
-          <span>🔄 Siklus Perubahan Wujud Zat</span>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100 text-amber-950 border-2 border-amber-300 text-xs sm:text-sm font-black mb-3 shadow-xs">
+          <span>🔄 Cerita Siklus Perubahan Wujud Zat ⭐</span>
         </div>
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 font-heading tracking-tight">
+        <h2 className="text-3xl sm:text-4xl font-black text-slate-950 font-heading tracking-tight">
           Diagram Perubahan Wujud Zat
         </h2>
-        <p className="mt-2 text-base text-slate-600 font-medium">
+        <p className="mt-2 text-sm sm:text-base text-slate-900 font-black">
           Klik diagram atau tombol perubahan untuk menyaksikan simulasi animasi 3D live!
         </p>
       </div>
@@ -92,10 +92,10 @@ export const TransitionsView: React.FC = () => {
         {/* Left Column: Interactive Diagram (7 cols) */}
         <div className="lg:col-span-7 flex flex-col gap-6">
           {/* Group 1: Menerima Panas */}
-          <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 p-5 rounded-3xl border border-amber-200 shadow-xs">
+          <div className="bg-gradient-to-br from-amber-100/95 via-yellow-50 to-orange-100/85 p-5 sm:p-6 rounded-[32px] border-3 border-amber-300 shadow-md shadow-amber-500/10">
             <div className="flex items-center gap-2 mb-3">
-              <Flame className="w-5 h-5 text-amber-600" />
-              <h3 className="text-sm font-extrabold text-amber-900 uppercase tracking-wider font-heading">
+              <Flame className="w-5 h-5 text-orange-600 stroke-[2.5]" />
+              <h3 className="text-sm sm:text-base font-black text-amber-950 uppercase tracking-wider font-heading">
                 🔥 MENERIMA PANAS (Dipanaskan)
               </h3>
             </div>
@@ -104,49 +104,49 @@ export const TransitionsView: React.FC = () => {
               {/* Mencair */}
               <button
                 onClick={() => handleSelectTransition('melting')}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                className={`p-3.5 rounded-[22px] border-2 text-left transition-all cursor-pointer ${
                   activeTransition === 'melting'
-                    ? 'bg-amber-500 text-white border-amber-600 shadow-md scale-[1.02]'
-                    : 'bg-white text-slate-800 border-amber-200/80 hover:bg-amber-50/50'
+                    ? 'bg-amber-400 text-amber-950 border-amber-600 font-black shadow-md scale-[1.02] ring-2 ring-amber-300'
+                    : 'bg-white/98 text-slate-950 font-black border-amber-300 hover:bg-amber-50'
                 }`}
               >
-                <div className="text-xs font-bold opacity-80">PADAT ➔ CAIR</div>
-                <div className="text-base font-extrabold mt-0.5">Mencair 🧊💧</div>
+                <div className="text-xs font-black opacity-90 font-heading">PADAT ➔ CAIR</div>
+                <div className="text-base sm:text-lg font-black mt-0.5 font-heading">Mencair 🧊💧</div>
               </button>
 
               {/* Menguap */}
               <button
                 onClick={() => handleSelectTransition('evaporation')}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                className={`p-3.5 rounded-[22px] border-2 text-left transition-all cursor-pointer ${
                   activeTransition === 'evaporation'
-                    ? 'bg-orange-500 text-white border-orange-600 shadow-md scale-[1.02]'
-                    : 'bg-white text-slate-800 border-orange-200/80 hover:bg-orange-50/50'
+                    ? 'bg-orange-500 text-white border-orange-700 font-black shadow-md scale-[1.02] ring-2 ring-orange-300'
+                    : 'bg-white/98 text-slate-950 font-black border-orange-300 hover:bg-orange-50'
                 }`}
               >
-                <div className="text-xs font-bold opacity-80">CAIR ➔ GAS</div>
-                <div className="text-base font-extrabold mt-0.5">Menguap 💧☁️</div>
+                <div className="text-xs font-black opacity-90 font-heading">CAIR ➔ GAS</div>
+                <div className="text-base sm:text-lg font-black mt-0.5 font-heading">Menguap 💧☁️</div>
               </button>
 
               {/* Menyublim */}
               <button
                 onClick={() => handleSelectTransition('sublimation')}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                className={`p-3.5 rounded-[22px] border-2 text-left transition-all cursor-pointer ${
                   activeTransition === 'sublimation'
-                    ? 'bg-purple-600 text-white border-purple-700 shadow-md scale-[1.02]'
-                    : 'bg-white text-slate-800 border-purple-200/80 hover:bg-purple-50/50'
+                    ? 'bg-purple-600 text-white border-purple-800 font-black shadow-md scale-[1.02] ring-2 ring-purple-300'
+                    : 'bg-white/98 text-slate-950 font-black border-purple-300 hover:bg-purple-50'
                 }`}
               >
-                <div className="text-xs font-bold opacity-80">PADAT ➔ GAS</div>
-                <div className="text-base font-extrabold mt-0.5">Menyublim 🧊☁️</div>
+                <div className="text-xs font-black opacity-90 font-heading">PADAT ➔ GAS</div>
+                <div className="text-base sm:text-lg font-black mt-0.5 font-heading">Menyublim 🧊☁️</div>
               </button>
             </div>
           </div>
 
           {/* Group 2: Melepaskan Panas */}
-          <div className="bg-gradient-to-r from-sky-500/10 via-cyan-500/10 to-indigo-500/10 p-5 rounded-3xl border border-sky-200 shadow-xs">
+          <div className="bg-gradient-to-br from-sky-100/95 via-cyan-50 to-indigo-100/85 p-5 sm:p-6 rounded-[32px] border-3 border-sky-300 shadow-md shadow-sky-500/10">
             <div className="flex items-center gap-2 mb-3">
-              <Snowflake className="w-5 h-5 text-sky-600" />
-              <h3 className="text-sm font-extrabold text-sky-900 uppercase tracking-wider font-heading">
+              <Snowflake className="w-5 h-5 text-sky-700 stroke-[3]" />
+              <h3 className="text-sm sm:text-base font-black text-sky-950 uppercase tracking-wider font-heading">
                 ❄️ MELEPASKAN PANAS (Didinginkan)
               </h3>
             </div>
@@ -155,64 +155,64 @@ export const TransitionsView: React.FC = () => {
               {/* Membeku */}
               <button
                 onClick={() => handleSelectTransition('freezing')}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                className={`p-3.5 rounded-[22px] border-2 text-left transition-all cursor-pointer ${
                   activeTransition === 'freezing'
-                    ? 'bg-sky-600 text-white border-sky-700 shadow-md scale-[1.02]'
-                    : 'bg-white text-slate-800 border-sky-200/80 hover:bg-sky-50/50'
+                    ? 'bg-sky-500 text-white border-sky-700 font-black shadow-md scale-[1.02] ring-2 ring-sky-300'
+                    : 'bg-white/98 text-slate-950 font-black border-sky-300 hover:bg-sky-50'
                 }`}
               >
-                <div className="text-xs font-bold opacity-80">CAIR ➔ PADAT</div>
-                <div className="text-base font-extrabold mt-0.5">Membeku 💧🧊</div>
+                <div className="text-xs font-black opacity-90 font-heading">CAIR ➔ PADAT</div>
+                <div className="text-base sm:text-lg font-black mt-0.5 font-heading">Membeku 💧🧊</div>
               </button>
 
               {/* Mengembun */}
               <button
                 onClick={() => handleSelectTransition('condensation')}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                className={`p-3.5 rounded-[22px] border-2 text-left transition-all cursor-pointer ${
                   activeTransition === 'condensation'
-                    ? 'bg-cyan-600 text-white border-cyan-700 shadow-md scale-[1.02]'
-                    : 'bg-white text-slate-800 border-cyan-200/80 hover:bg-cyan-50/50'
+                    ? 'bg-cyan-600 text-white border-cyan-800 font-black shadow-md scale-[1.02] ring-2 ring-cyan-300'
+                    : 'bg-white/98 text-slate-950 font-black border-cyan-300 hover:bg-cyan-50'
                 }`}
               >
-                <div className="text-xs font-bold opacity-80">GAS ➔ CAIR</div>
-                <div className="text-base font-extrabold mt-0.5">Mengembun ☁️💧</div>
+                <div className="text-xs font-black opacity-90 font-heading">GAS ➔ CAIR</div>
+                <div className="text-base sm:text-lg font-black mt-0.5 font-heading">Mengembun ☁️💧</div>
               </button>
 
               {/* Mengkristal */}
               <button
                 onClick={() => handleSelectTransition('deposition')}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                className={`p-3.5 rounded-[22px] border-2 text-left transition-all cursor-pointer ${
                   activeTransition === 'deposition'
-                    ? 'bg-indigo-600 text-white border-indigo-700 shadow-md scale-[1.02]'
-                    : 'bg-white text-slate-800 border-indigo-200/80 hover:bg-indigo-50/50'
+                    ? 'bg-indigo-600 text-white border-indigo-800 font-black shadow-md scale-[1.02] ring-2 ring-indigo-300'
+                    : 'bg-white/98 text-slate-950 font-black border-indigo-300 hover:bg-indigo-50'
                 }`}
               >
-                <div className="text-xs font-bold opacity-80">GAS ➔ PADAT</div>
-                <div className="text-base font-extrabold mt-0.5">Mengkristal ☁️🧊</div>
+                <div className="text-xs font-black opacity-90 font-heading">GAS ➔ PADAT</div>
+                <div className="text-base sm:text-lg font-black mt-0.5 font-heading">Mengkristal ☁️🧊</div>
               </button>
             </div>
           </div>
 
           {/* Interactive Visual Cycle Map */}
-          <div className="p-2.5 sm:p-6 bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl border-2 border-slate-200/90 shadow-xs flex flex-col items-center w-full max-w-full overflow-hidden box-border">
-            <div className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 sm:mb-4">
+          <div className="p-2.5 sm:p-6 bg-white/98 backdrop-blur-md rounded-2xl sm:rounded-3xl border-3 border-slate-300 shadow-md flex flex-col items-center w-full max-w-full overflow-hidden box-border">
+            <div className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider mb-1.5 sm:mb-4">
               Peta Visual Hubungan Tiga Zat
             </div>
             <div className="w-full max-w-full flex justify-between items-center relative py-1.5 sm:py-4 gap-0.5 sm:gap-2 box-border">
               {/* Padat Node */}
               <div className="flex flex-col items-center shrink-0">
-                <div className="w-8 h-8 sm:w-14 sm:h-14 rounded-lg sm:rounded-2xl bg-sky-100 border border-sky-300 flex items-center justify-center text-base sm:text-2xl shadow-xs">
+                <div className="w-8 h-8 sm:w-14 sm:h-14 rounded-lg sm:rounded-2xl bg-sky-100 border-2 border-sky-400 flex items-center justify-center text-base sm:text-2xl shadow-xs">
                   🧊
                 </div>
-                <span className="text-[9px] sm:text-xs font-bold text-slate-800 mt-0.5 sm:mt-1">PADAT</span>
+                <span className="text-[10px] sm:text-xs font-black text-slate-950 mt-0.5 sm:mt-1">PADAT</span>
               </div>
 
               {/* Center Arrows 1 */}
               <div className="flex-1 min-w-0 flex flex-col items-center gap-0.5 sm:gap-2 px-0.5 sm:px-2">
-                <div className="w-full flex items-center justify-center text-[8px] sm:text-[11px] font-bold text-amber-600 bg-amber-50 px-0.5 sm:px-2 py-0.5 rounded-full border border-amber-200 truncate">
+                <div className="w-full flex items-center justify-center text-[9px] sm:text-[11px] font-black text-amber-950 bg-amber-100 px-0.5 sm:px-2 py-0.5 rounded-full border-2 border-amber-300 truncate">
                   <span className="truncate">Mencair ➔</span>
                 </div>
-                <div className="w-full flex items-center justify-center text-[8px] sm:text-[11px] font-bold text-sky-600 bg-sky-50 px-0.5 sm:px-2 py-0.5 rounded-full border border-sky-200 truncate">
+                <div className="w-full flex items-center justify-center text-[9px] sm:text-[11px] font-black text-sky-950 bg-sky-100 px-0.5 sm:px-2 py-0.5 rounded-full border-2 border-sky-300 truncate">
                   <span className="truncate hidden sm:inline">⬅ Membeku</span>
                   <span className="truncate sm:hidden">⬅ Beku</span>
                 </div>
@@ -220,18 +220,18 @@ export const TransitionsView: React.FC = () => {
 
               {/* Cair Node */}
               <div className="flex flex-col items-center shrink-0">
-                <div className="w-8 h-8 sm:w-14 sm:h-14 rounded-lg sm:rounded-2xl bg-teal-100 border border-teal-300 flex items-center justify-center text-base sm:text-2xl shadow-xs">
+                <div className="w-8 h-8 sm:w-14 sm:h-14 rounded-lg sm:rounded-2xl bg-teal-100 border-2 border-teal-400 flex items-center justify-center text-base sm:text-2xl shadow-xs">
                   💧
                 </div>
-                <span className="text-[9px] sm:text-xs font-bold text-slate-800 mt-0.5 sm:mt-1">CAIR</span>
+                <span className="text-[10px] sm:text-xs font-black text-slate-950 mt-0.5 sm:mt-1">CAIR</span>
               </div>
 
               {/* Center Arrows 2 */}
               <div className="flex-1 min-w-0 flex flex-col items-center gap-0.5 sm:gap-2 px-0.5 sm:px-2">
-                <div className="w-full flex items-center justify-center text-[8px] sm:text-[11px] font-bold text-orange-600 bg-orange-50 px-0.5 sm:px-2 py-0.5 rounded-full border border-orange-200 truncate">
+                <div className="w-full flex items-center justify-center text-[9px] sm:text-[11px] font-black text-orange-950 bg-orange-100 px-0.5 sm:px-2 py-0.5 rounded-full border-2 border-orange-300 truncate">
                   <span className="truncate">Menguap ➔</span>
                 </div>
-                <div className="w-full flex items-center justify-center text-[8px] sm:text-[11px] font-bold text-cyan-600 bg-cyan-50 px-0.5 sm:px-2 py-0.5 rounded-full border border-cyan-200 truncate">
+                <div className="w-full flex items-center justify-center text-[9px] sm:text-[11px] font-black text-cyan-950 bg-cyan-100 px-0.5 sm:px-2 py-0.5 rounded-full border-2 border-cyan-300 truncate">
                   <span className="truncate hidden sm:inline">⬅ Mengembun</span>
                   <span className="truncate sm:hidden">⬅ Embun</span>
                 </div>
@@ -239,17 +239,17 @@ export const TransitionsView: React.FC = () => {
 
               {/* Gas Node */}
               <div className="flex flex-col items-center shrink-0">
-                <div className="w-8 h-8 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-purple-100 border border-purple-300 flex items-center justify-center text-base sm:text-2xl shadow-xs">
+                <div className="w-8 h-8 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-purple-100 border-2 border-purple-400 flex items-center justify-center text-base sm:text-2xl shadow-xs">
                   ☁️
                 </div>
-                <span className="text-[9px] sm:text-xs font-bold text-slate-800 mt-0.5 sm:mt-1">GAS</span>
+                <span className="text-[10px] sm:text-xs font-black text-slate-950 mt-0.5 sm:mt-1">GAS</span>
               </div>
             </div>
             
             {/* Long distance jump: Menyublim & Mengkristal */}
-            <div className="w-full pt-2 sm:pt-3 mt-1.5 sm:mt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-1 text-[9px] sm:text-[11px] font-bold text-slate-500 text-center">
-              <span className="text-purple-600">Padat ➜ Gas : Menyublim ✨</span>
-              <span className="text-indigo-600">Gas ➜ Padat : Mengkristal ❄️</span>
+            <div className="w-full pt-2 sm:pt-3 mt-1.5 sm:mt-2 border-t-2 border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-1 text-[10px] sm:text-xs font-black text-slate-900 text-center">
+              <span className="text-purple-900 font-black">Padat ➜ Gas : Menyublim ✨</span>
+              <span className="text-indigo-900 font-black">Gas ➜ Padat : Mengkristal ❄️</span>
             </div>
           </div>
         </div>
@@ -258,33 +258,33 @@ export const TransitionsView: React.FC = () => {
         <div className="lg:col-span-5 flex flex-col gap-5">
           <Transition3DViewer transitionType={activeTransition} />
 
-          <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col gap-4">
+          <div className="bg-white/95 p-6 rounded-[32px] border-3 border-sky-200 shadow-md shadow-sky-500/10 flex flex-col gap-4">
             <div>
-              <div className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 bg-slate-100 text-slate-800 border border-slate-200">
+              <div className="inline-block px-3.5 py-1.5 rounded-full text-xs font-black mb-2 bg-amber-100 text-amber-950 border-2 border-amber-300 shadow-2xs">
                 {currentTransMeta.heatLabel}
               </div>
-              <h4 className="text-2xl font-black text-slate-900 font-heading">
+              <h4 className="text-2xl sm:text-3xl font-black text-slate-900 font-heading">
                 Proses {currentTransMeta.name}
               </h4>
-              <p className="text-xs font-mono font-bold text-indigo-600 mt-0.5">
+              <p className="text-xs sm:text-sm font-black text-orange-600 mt-0.5 font-heading">
                 {currentTransMeta.simpleFormula}
               </p>
             </div>
 
-            <p className="text-sm font-medium text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
+            <p className="text-sm sm:text-base font-bold text-slate-700 leading-relaxed bg-amber-50/70 p-4 rounded-[22px] border-2 border-amber-200/90">
               {currentTransMeta.explanation}
             </p>
 
-            <div className="p-4 rounded-2xl bg-sky-50/70 border border-sky-100">
-              <span className="text-xs font-bold uppercase text-sky-900 tracking-wide block mb-1">
-                Contoh Nyata:
+            <div className="p-4 rounded-[22px] bg-sky-50 border-2 border-sky-200">
+              <span className="text-xs font-black uppercase text-sky-950 tracking-wide block mb-1 font-heading">
+                🌟 Contoh di Kehidupan Sehari-hari:
               </span>
-              <p className="text-xs text-slate-700 font-medium">
+              <p className="text-xs sm:text-sm text-slate-700 font-bold">
                 {currentTransMeta.dailyExample}
               </p>
             </div>
 
-            <div className="text-xs font-semibold text-amber-700 bg-amber-50 p-3 rounded-xl border border-amber-100">
+            <div className="text-xs sm:text-sm font-black text-amber-950 bg-gradient-to-r from-amber-100 to-yellow-100 p-3.5 rounded-[20px] border-2 border-amber-300 shadow-2xs">
               💡 {currentTransMeta.funFact}
             </div>
           </div>
@@ -292,16 +292,16 @@ export const TransitionsView: React.FC = () => {
       </div>
 
       {/* 2. FITUR "COBA SENDIRI" (Mini Simulasi Interaktif - Section 10) */}
-      <section className="bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 p-6 sm:p-8 rounded-3xl border border-indigo-100 shadow-sm">
+      <section className="bg-gradient-to-br from-amber-100/90 via-sky-50 to-orange-100/80 p-6 sm:p-8 rounded-[36px] border-3 border-amber-300 shadow-lg shadow-amber-500/10">
         <div className="text-center max-w-2xl mx-auto mb-6">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-indigo-700 text-xs font-bold shadow-2xs mb-2">
-            <Compass className="w-3.5 h-3.5" />
-            <span>Mini Lab Mandiri</span>
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-300 text-amber-950 text-xs sm:text-sm font-black shadow-xs mb-2 border border-amber-400">
+            <Compass className="w-4 h-4 text-orange-700 stroke-[2.5]" />
+            <span>Mini Lab Mandiri Siswa ⭐</span>
           </div>
-          <h3 className="text-2xl font-extrabold text-slate-900 font-heading">
+          <h3 className="text-2xl sm:text-3xl font-black text-slate-900 font-heading">
             Fitur: Coba Sendiri!
           </h3>
-          <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
+          <p className="text-xs sm:text-base text-slate-700 font-bold mt-1">
             Pilih zat mula-mula, lalu tentukan apakah kamu ingin memberi panas atau dingin. Lihat apa yang terjadi!
           </p>
         </div>
