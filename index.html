@@ -15,6 +15,1062 @@
   </head>
   <body class="antialiased text-slate-900 bg-sky-200/70 selection:bg-amber-300 selection:text-slate-950 min-h-screen">
     <div id="root"></div>
+
+    <!-- ============================================================== -->
+    <!-- FITUR: LOGIN ANAK & PANEL GURU (HTML, CSS, & VANILLA JS MURNI) -->
+    <!-- Murni sebagai overlay mengambang (fixed, z-index 9999).         -->
+    <!-- TIDAK ADA styling global pada body, html, atau canvas.          -->
+    <!-- ============================================================== -->
+
+    <style>
+      /* --- Scoped CSS: Layar Login Anak (#ui-login-energi) --- */
+      #ui-login-energi {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(12, 74, 110, 0.72);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        padding: 16px;
+        box-sizing: border-box;
+        font-family: 'Fredoka', 'Quicksand', system-ui, -apple-system, sans-serif;
+      }
+
+      #ui-login-energi * {
+        box-sizing: border-box;
+      }
+
+      #ui-login-card {
+        background: #ffffff;
+        border: 4px solid #f59e0b;
+        border-radius: 32px;
+        box-shadow: 0 25px 50px -12px rgba(180, 83, 9, 0.4), 0 0 0 6px rgba(254, 243, 199, 0.9);
+        width: 100%;
+        max-width: 440px;
+        padding: 32px 28px;
+        text-align: center;
+        animation: ui-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+      }
+
+      @keyframes ui-pop-in {
+        0% {
+          opacity: 0;
+          transform: scale(0.86) translateY(18px);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      #ui-login-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fef3c7;
+        color: #92400e;
+        border: 2px solid #fde68a;
+        padding: 5px 14px;
+        border-radius: 9999px;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 12px;
+      }
+
+      #ui-login-icon {
+        font-size: 52px;
+        line-height: 1;
+        margin-bottom: 10px;
+        display: inline-block;
+        animation: ui-float-icon 3s ease-in-out infinite;
+      }
+
+      @keyframes ui-float-icon {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+      }
+
+      #ui-login-title {
+        color: #0f172a;
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0 0 6px 0;
+        letter-spacing: -0.02em;
+      }
+
+      #ui-login-subtitle {
+        color: #475569;
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0 0 22px 0;
+        line-height: 1.45;
+      }
+
+      #ui-login-label {
+        display: block;
+        text-align: left;
+        color: #1e293b;
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        padding-left: 4px;
+      }
+
+      #ui-login-input {
+        width: 100%;
+        padding: 14px 18px;
+        font-size: 16px;
+        font-family: inherit;
+        font-weight: 700;
+        color: #0f172a;
+        background: #f8fafc;
+        border: 3px solid #cbd5e1;
+        border-radius: 18px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+      }
+
+      #ui-login-input:focus {
+        background: #ffffff;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.22);
+      }
+
+      #ui-login-input::placeholder {
+        color: #94a3b8;
+        font-weight: 500;
+      }
+
+      #ui-login-error {
+        display: none;
+        color: #dc2626;
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 8px;
+        text-align: left;
+        padding-left: 4px;
+      }
+
+      #ui-btn-mulai-petualangan {
+        margin-top: 20px;
+        width: 100%;
+        padding: 15px 24px;
+        font-size: 17px;
+        font-weight: 800;
+        font-family: inherit;
+        color: #ffffff;
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #d97706 100%);
+        border: 3px solid #c2410c;
+        border-radius: 20px;
+        box-shadow: 0 6px 0 #9a3412, 0 12px 20px -4px rgba(234, 88, 12, 0.4);
+        cursor: pointer;
+        transition: transform 0.12s, box-shadow 0.12s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      #ui-btn-mulai-petualangan:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 0 #9a3412, 0 16px 24px -4px rgba(234, 88, 12, 0.5);
+      }
+
+      #ui-btn-mulai-petualangan:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #9a3412, 0 6px 12px -2px rgba(234, 88, 12, 0.4);
+      }
+
+      #ui-login-footer-hint {
+        margin-top: 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+      }
+
+      /* --- Scoped CSS: Tombol Panel Guru (Teks aja tanpa border tebal) --- */
+      .ui-btn-guru-text {
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: 'Quicksand', 'Comfortaa', system-ui, -apple-system, sans-serif;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+        transition: color 0.15s ease, background-color 0.15s ease;
+        user-select: none;
+      }
+
+      .ui-btn-guru-text:hover {
+        color: #0284c7;
+        background-color: rgba(2, 132, 199, 0.08) !important;
+      }
+
+      .ui-btn-guru-text:active {
+        color: #0369a1;
+      }
+
+      /* Tombol helper mengambang di pojok layar jika layar login sudah ditutup (teks tanpa border) */
+      .ui-btn-guru-corner {
+        position: fixed;
+        bottom: 12px;
+        right: 14px;
+        z-index: 9995;
+        background: rgba(255, 255, 255, 0.9) !important;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        border: none !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+      }
+
+      /* --- Scoped CSS: Modal Keamanan PIN Guru (#ui-pin-modal-energi) --- */
+      #ui-pin-modal-energi {
+        position: fixed;
+        inset: 0;
+        z-index: 10001;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(15, 23, 42, 0.72);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        padding: 16px;
+        box-sizing: border-box;
+        font-family: 'Fredoka', 'Quicksand', system-ui, -apple-system, sans-serif;
+      }
+
+      #ui-pin-modal-energi * {
+        box-sizing: border-box;
+      }
+
+      #ui-pin-card {
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+        width: 100%;
+        max-width: 400px;
+        padding: 26px 24px;
+        animation: ui-pop-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        text-align: left;
+      }
+
+      #ui-pin-input-field {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 16px;
+        font-family: inherit;
+        font-weight: 700;
+        color: #0f172a;
+        background: #f8fafc;
+        border: 2px solid #cbd5e1;
+        border-radius: 14px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+        margin-top: 6px;
+      }
+
+      #ui-pin-input-field:focus {
+        background: #ffffff;
+        border-color: #0284c7;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
+      }
+
+      #ui-pin-error-msg {
+        display: none;
+        color: #dc2626;
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 8px;
+      }
+
+      #ui-pin-btn-batal {
+        background: #f1f5f9;
+        color: #475569;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 14px;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background-color 0.15s;
+      }
+
+      #ui-pin-btn-batal:hover {
+        background: #e2e8f0;
+      }
+
+      #ui-pin-btn-submit {
+        background: #0284c7;
+        color: #ffffff;
+        border: none;
+        padding: 10px 22px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 14px;
+        font-family: inherit;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.35);
+        transition: background-color 0.15s, transform 0.1s;
+      }
+
+      #ui-pin-btn-submit:hover {
+        background: #0369a1;
+        transform: translateY(-1px);
+      }
+
+      #ui-pin-btn-submit:active {
+        transform: translateY(1px);
+      }
+
+      /* --- Scoped CSS: Dashboard Admin Modal (#ui-panel-admin-energi) --- */
+      #ui-panel-admin-energi {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(15, 23, 42, 0.78);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        padding: 16px;
+        box-sizing: border-box;
+        font-family: 'Quicksand', 'Comfortaa', system-ui, sans-serif;
+      }
+
+      #ui-panel-admin-energi * {
+        box-sizing: border-box;
+      }
+
+      #ui-admin-card {
+        background: #ffffff;
+        border: 3px solid #cbd5e1;
+        border-radius: 28px;
+        box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4);
+        width: 100%;
+        max-width: 760px;
+        max-height: 88vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: ui-pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      #ui-admin-header {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        color: #ffffff;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 3px solid #334155;
+      }
+
+      #ui-admin-header-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      #ui-admin-header-title h2 {
+        margin: 0;
+        font-size: 19px;
+        font-weight: 800;
+        color: #f8fafc;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      #ui-admin-badge {
+        background: #0284c7;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 3px 10px;
+        border-radius: 9999px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      #ui-admin-btn-close-x {
+        background: #334155;
+        border: none;
+        color: #e2e8f0;
+        font-size: 20px;
+        font-weight: 800;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.15s;
+      }
+
+      #ui-admin-btn-close-x:hover {
+        background: #dc2626;
+        color: #ffffff;
+      }
+
+      #ui-admin-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        padding: 16px 24px;
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+      }
+
+      .ui-stat-box {
+        background: #ffffff;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 12px 14px;
+        text-align: center;
+      }
+
+      .ui-stat-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 4px;
+      }
+
+      .ui-stat-value {
+        font-size: 20px;
+        font-weight: 800;
+        color: #0f172a;
+      }
+
+      #ui-admin-body {
+        padding: 20px 24px;
+        overflow-y: auto;
+        flex: 1;
+      }
+
+      #ui-table-container {
+        width: 100%;
+        overflow-x: auto;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+      }
+
+      #ui-admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        text-align: left;
+      }
+
+      #ui-admin-table th {
+        background: #f1f5f9;
+        color: #334155;
+        font-weight: 800;
+        padding: 12px 16px;
+        border-bottom: 2px solid #cbd5e1;
+        white-space: nowrap;
+      }
+
+      #ui-admin-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #1e293b;
+        font-weight: 600;
+      }
+
+      #ui-admin-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      #ui-admin-table tr:hover td {
+        background: #f8fafc;
+      }
+
+      .ui-score-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-weight: 800;
+        font-size: 13px;
+      }
+
+      .ui-score-high {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #86efac;
+      }
+
+      .ui-score-mid {
+        background: #fef9c3;
+        color: #a16207;
+        border: 1px solid #fde047;
+      }
+
+      .ui-score-low {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+      }
+
+      #ui-empty-state {
+        display: none;
+        text-align: center;
+        padding: 36px 20px;
+      }
+
+      #ui-empty-state-icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+      }
+
+      #ui-empty-state p {
+        margin: 4px 0;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      #ui-admin-footer {
+        padding: 16px 24px;
+        background: #f8fafc;
+        border-top: 2px solid #e2e8f0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .ui-admin-btn-action {
+        padding: 10px 18px;
+        border-radius: 14px;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: background-color 0.15s, border-color 0.15s;
+      }
+
+      #ui-btn-tutup-admin {
+        background: #0f172a;
+        color: #ffffff;
+        border: 2px solid #0f172a;
+      }
+
+      #ui-btn-tutup-admin:hover {
+        background: #1e293b;
+      }
+
+      #ui-btn-clear-history {
+        background: #ffffff;
+        color: #dc2626;
+        border: 2px solid #fecaca;
+      }
+
+      #ui-btn-clear-history:hover {
+        background: #fef2f2;
+        border-color: #f87171;
+      }
+
+      #ui-btn-buka-login-baru {
+        background: #fef3c7;
+        color: #92400e;
+        border: 2px solid #fde68a;
+      }
+
+      #ui-btn-buka-login-baru:hover {
+        background: #fde68a;
+      }
+
+      @media (max-width: 640px) {
+        #ui-admin-stats {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+        #ui-admin-footer {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        #ui-admin-footer button {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    </style>
+
+    <!-- 1. Overlay Layar Login Anak (Di tengah layar) -->
+    <div id="ui-login-energi">
+      <div id="ui-login-card">
+        <div id="ui-login-badge">⭐ Petualangan Sains SD</div>
+        <div id="ui-login-icon">🚀</div>
+        <h1 id="ui-login-title">Halo Sahabat Cilik! 👋</h1>
+        <p id="ui-login-subtitle">Siap menjelajahi dunia ajaib 3D Wujud Zat dan Perubahannya?</p>
+        
+        <label id="ui-login-label" for="ui-login-input">Siapa namamu?</label>
+        <input 
+          id="ui-login-input" 
+          type="text" 
+          placeholder="Ketik namamu di sini..." 
+          maxlength="30"
+          autocomplete="off"
+        />
+        <div id="ui-login-error">⚠️ Tuliskan namamu terlebih dahulu yaa! 😊</div>
+
+        <button id="ui-btn-mulai-petualangan" type="button">
+          <span>🚀 Mulai Petualangan</span>
+        </button>
+
+        <div id="ui-login-footer-hint">
+          ✨ Tanpa kata sandi, langsung belajar & bermain seru!
+        </div>
+
+        <!-- Tombol Panel Guru berada di dalam popup login siswa (Teks aja tanpa border tebal) -->
+        <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: center; align-items: center;">
+          <button id="ui-btn-guru-energi" class="ui-btn-guru-text" type="button" title="Masuk ke Panel Guru (Khusus Pengajar)">
+            <span>⚙️</span>
+            <span>Panel Guru</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Tombol Panel Guru Tambahan (Mengambang di pojok, teks murni tanpa border tebal) -->
+    <button id="ui-btn-guru-corner" class="ui-btn-guru-text ui-btn-guru-corner" type="button" title="Buka Panel Guru (Khusus Guru)">
+      <span>⚙️</span>
+      <span>Panel Guru</span>
+    </button>
+
+    <!-- 3. Modal Keamanan PIN Guru (100% andal di semua browser & sandboxed iframe) -->
+    <div id="ui-pin-modal-energi">
+      <div id="ui-pin-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 22px;">🔒</span>
+            <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;">Akses Panel Guru</h3>
+          </div>
+          <button id="ui-pin-btn-close-x" type="button" style="background: none; border: none; font-size: 22px; color: #94a3b8; cursor: pointer; padding: 2px 6px;" title="Tutup">&times;</button>
+        </div>
+
+        <p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #475569; text-align: left;">
+          Masukkan PIN
+        </p>
+
+        <input 
+          id="ui-pin-input-field" 
+          type="password" 
+          placeholder="Masukkan PIN" 
+          autocomplete="off"
+        />
+
+        <div id="ui-pin-error-msg">❌ PIN Guru salah! Silakan coba lagi.</div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+          <button id="ui-pin-btn-batal" type="button">Batal</button>
+          <button id="ui-pin-btn-submit" type="button">Buka Panel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Dashboard Admin Modal (Panel Guru) -->
+    <div id="ui-panel-admin-energi">
+      <div id="ui-admin-card">
+        <!-- Header -->
+        <div id="ui-admin-header">
+          <div id="ui-admin-header-title">
+            <h2>⚙️ Panel Guru — Riwayat Siswa</h2>
+            <span id="ui-admin-badge">histori_energi</span>
+          </div>
+          <button id="ui-admin-btn-close-x" type="button" title="Tutup Panel">&times;</button>
+        </div>
+
+        <!-- Summary Stats -->
+        <div id="ui-admin-stats">
+          <div class="ui-stat-box">
+            <div class="ui-stat-label">Total Siswa</div>
+            <div class="ui-stat-value" id="ui-stat-total">0</div>
+          </div>
+          <div class="ui-stat-box">
+            <div class="ui-stat-label">Rata-rata Skor</div>
+            <div class="ui-stat-value" id="ui-stat-avg">0</div>
+          </div>
+          <div class="ui-stat-box">
+            <div class="ui-stat-label">Siswa Terakhir</div>
+            <div class="ui-stat-value" id="ui-stat-last" style="font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">-</div>
+          </div>
+        </div>
+
+        <!-- Table Body -->
+        <div id="ui-admin-body">
+          <div id="ui-table-container">
+            <table id="ui-admin-table">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">No</th>
+                  <th>Nama Siswa</th>
+                  <th>Waktu</th>
+                  <th style="text-align: center;">Skor</th>
+                </tr>
+              </thead>
+              <tbody id="ui-admin-table-body">
+                <!-- Data dari localStorage di-render via Vanilla JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <div id="ui-empty-state">
+            <div id="ui-empty-state-icon">📋</div>
+            <p><strong>Belum ada riwayat siswa.</strong></p>
+            <p>Data akan otomatis masuk saat anak mengetik nama dan mengklik "Mulai Petualangan".</p>
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div id="ui-admin-footer">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button id="ui-btn-buka-login-baru" class="ui-admin-btn-action" type="button">
+              <span>👤 Buka Login Siswa Baru</span>
+            </button>
+            <button id="ui-btn-clear-history" class="ui-admin-btn-action" type="button">
+              <span>🗑️ Hapus Riwayat</span>
+            </button>
+          </div>
+          <button id="ui-btn-tutup-admin" class="ui-admin-btn-action" type="button">
+            <span>Tutup Panel</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vanilla JavaScript Murni untuk Pengendalian Overlay, Cache, & Admin -->
+    <script>
+      (function () {
+        var CACHE_KEY = 'histori_energi';
+        var PIN_GURU = 'guru12345';
+
+        // Elemen DOM Login
+        var loginOverlay = document.getElementById('ui-login-energi');
+        var inputNama = document.getElementById('ui-login-input');
+        var btnMulai = document.getElementById('ui-btn-mulai-petualangan');
+        var loginError = document.getElementById('ui-login-error');
+
+        // Elemen DOM Tombol Guru
+        var btnGuruInLogin = document.getElementById('ui-btn-guru-energi');
+        var btnGuruCorner = document.getElementById('ui-btn-guru-corner');
+
+        // Elemen DOM PIN Modal
+        var pinModal = document.getElementById('ui-pin-modal-energi');
+        var pinInput = document.getElementById('ui-pin-input-field');
+        var pinError = document.getElementById('ui-pin-error-msg');
+        var btnPinSubmit = document.getElementById('ui-pin-btn-submit');
+        var btnPinBatal = document.getElementById('ui-pin-btn-batal');
+        var btnPinCloseX = document.getElementById('ui-pin-btn-close-x');
+
+        // Elemen DOM Admin Modal
+        var adminModal = document.getElementById('ui-panel-admin-energi');
+        var btnCloseX = document.getElementById('ui-admin-btn-close-x');
+        var btnTutupAdmin = document.getElementById('ui-btn-tutup-admin');
+        var btnClearHistory = document.getElementById('ui-btn-clear-history');
+        var btnBukaLoginBaru = document.getElementById('ui-btn-buka-login-baru');
+
+        var tableBody = document.getElementById('ui-admin-table-body');
+        var emptyState = document.getElementById('ui-empty-state');
+        var tableContainer = document.getElementById('ui-table-container');
+
+        var statTotal = document.getElementById('ui-stat-total');
+        var statAvg = document.getElementById('ui-stat-avg');
+        var statLast = document.getElementById('ui-stat-last');
+
+        // Mengambil histori_energi dari localStorage
+        function getHistori() {
+          try {
+            var raw = localStorage.getItem(CACHE_KEY);
+            if (!raw) return [];
+            var parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch (e) {
+            console.error('Gagal membaca histori_energi:', e);
+            return [];
+          }
+        }
+
+        // Menyimpan histori_energi ke localStorage
+        function saveHistori(arr) {
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(arr));
+          } catch (e) {
+            console.error('Gagal menyimpan histori_energi:', e);
+          }
+        }
+
+        // Format waktu akses ramah pengguna
+        function getWaktuSekarang() {
+          var d = new Date();
+          var tgl = d.getDate().toString().padStart(2, '0');
+          var blnArr = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+          var bln = blnArr[d.getMonth()];
+          var thn = d.getFullYear();
+          var jam = d.getHours().toString().padStart(2, '0');
+          var mnt = d.getMinutes().toString().padStart(2, '0');
+          return tgl + ' ' + bln + ' ' + thn + ', ' + jam + ':' + mnt;
+        }
+
+        function escapeHtml(str) {
+          var div = document.createElement('div');
+          div.textContent = str;
+          return div.innerHTML;
+        }
+
+        // 1. Eksekusi Login Anak
+        function handleLogin() {
+          if (!inputNama) return;
+          var nama = inputNama.value.trim();
+
+          if (!nama) {
+            if (loginError) loginError.style.display = 'block';
+            inputNama.focus();
+            return;
+          }
+
+          if (loginError) loginError.style.display = 'none';
+
+          // Simpan ke localStorage sesuai spesifikasi:
+          // array of objects: { nama, waktu, skor: 0 } dengan key 'histori_energi'
+          var list = getHistori();
+          list.push({
+            nama: nama,
+            waktu: getWaktuSekarang(),
+            skor: 0
+          });
+          saveHistori(list);
+
+          // Sembunyikan layar login agar anak bisa langsung melihat canvas 3D
+          if (loginOverlay) {
+            loginOverlay.style.display = 'none';
+          }
+        }
+
+        if (btnMulai) {
+          btnMulai.addEventListener('click', handleLogin);
+        }
+
+        if (inputNama) {
+          inputNama.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+              handleLogin();
+            }
+          });
+          // Auto-fokus input nama setelah render
+          setTimeout(function () {
+            inputNama.focus();
+          }, 200);
+        }
+
+        // 2. Render Tabel Admin dari localStorage (histori_energi)
+        function renderAdminTable() {
+          var list = getHistori();
+          if (!tableBody) return;
+
+          tableBody.innerHTML = '';
+
+          if (list.length === 0) {
+            if (tableContainer) tableContainer.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
+            if (statTotal) statTotal.textContent = '0';
+            if (statAvg) statAvg.textContent = '0';
+            if (statLast) statLast.textContent = '-';
+            return;
+          }
+
+          if (tableContainer) tableContainer.style.display = 'block';
+          if (emptyState) emptyState.style.display = 'none';
+
+          var totalSkor = 0;
+
+          list.forEach(function (item, index) {
+            var skor = typeof item.skor === 'number' ? item.skor : 0;
+            totalSkor += skor;
+
+            var tr = document.createElement('tr');
+            var badgeClass = 'ui-score-low';
+            if (skor >= 80) badgeClass = 'ui-score-high';
+            else if (skor >= 50) badgeClass = 'ui-score-mid';
+
+            tr.innerHTML =
+              '<td style="color: #64748b;">' + (index + 1) + '</td>' +
+              '<td><strong style="color: #0f172a;">' + escapeHtml(item.nama || 'Siswa') + '</strong></td>' +
+              '<td style="color: #64748b; font-size: 13px;">' + escapeHtml(item.waktu || '-') + '</td>' +
+              '<td style="text-align: center;"><span class="ui-score-badge ' + badgeClass + '">' + skor + '</span></td>';
+
+            tableBody.appendChild(tr);
+          });
+
+          if (statTotal) statTotal.textContent = list.length.toString();
+          if (statAvg) statAvg.textContent = Math.round(totalSkor / list.length).toString();
+          if (statLast) statLast.textContent = list[list.length - 1].nama || '-';
+        }
+
+        // 3. Sistem Buka Modal PIN Guru (100% Aksesibel & Teruji di Iframe)
+        function bukaModalPin() {
+          if (pinError) pinError.style.display = 'none';
+          if (pinInput) pinInput.value = '';
+          if (pinModal) {
+            pinModal.style.display = 'flex';
+            setTimeout(function () {
+              if (pinInput) pinInput.focus();
+            }, 100);
+          }
+        }
+
+        function tutupModalPin() {
+          if (pinModal) pinModal.style.display = 'none';
+          if (pinError) pinError.style.display = 'none';
+        }
+
+        function submitPin() {
+          if (!pinInput) return;
+          var pinVal = pinInput.value.trim();
+
+          if (pinVal === PIN_GURU) {
+            tutupModalPin();
+            renderAdminTable();
+            if (adminModal) adminModal.style.display = 'flex';
+          } else {
+            if (pinError) pinError.style.display = 'block';
+            pinInput.focus();
+            pinInput.select();
+          }
+        }
+
+        // Event listener tombol Panel Guru di login popup dan pojok layar
+        if (btnGuruInLogin) {
+          btnGuruInLogin.addEventListener('click', function (e) {
+            e.stopPropagation();
+            bukaModalPin();
+          });
+        }
+
+        if (btnGuruCorner) {
+          btnGuruCorner.addEventListener('click', function (e) {
+            e.stopPropagation();
+            bukaModalPin();
+          });
+        }
+
+        // Handler tombol dalam modal PIN
+        if (btnPinSubmit) {
+          btnPinSubmit.addEventListener('click', submitPin);
+        }
+
+        if (btnPinBatal) {
+          btnPinBatal.addEventListener('click', tutupModalPin);
+        }
+
+        if (btnPinCloseX) {
+          btnPinCloseX.addEventListener('click', tutupModalPin);
+        }
+
+        if (pinInput) {
+          pinInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+              submitPin();
+            }
+          });
+        }
+
+        if (pinModal) {
+          pinModal.addEventListener('click', function (e) {
+            if (e.target === pinModal) {
+              tutupModalPin();
+            }
+          });
+        }
+
+        // Keyboard Shortcut: Escape menutup modal PIN atau Admin
+        window.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') {
+            if (pinModal && pinModal.style.display === 'flex') {
+              tutupModalPin();
+            } else if (adminModal && adminModal.style.display === 'flex') {
+              tutupModalAdmin();
+            }
+          }
+        });
+
+        // 4. Tutup Modal Admin
+        function tutupModalAdmin() {
+          if (adminModal) adminModal.style.display = 'none';
+        }
+
+        if (btnCloseX) btnCloseX.addEventListener('click', tutupModalAdmin);
+        if (btnTutupAdmin) btnTutupAdmin.addEventListener('click', tutupModalAdmin);
+
+        // Hapus Riwayat Belajar Siswa (dengan konfirmasi in-button yang aman di iframe)
+        var confirmClearTimeout = null;
+        if (btnClearHistory) {
+          btnClearHistory.addEventListener('click', function () {
+            if (btnClearHistory.getAttribute('data-confirming') === 'true') {
+              saveHistori([]);
+              renderAdminTable();
+              btnClearHistory.removeAttribute('data-confirming');
+              btnClearHistory.innerHTML = '<span>🗑️ Hapus Riwayat</span>';
+              if (confirmClearTimeout) clearTimeout(confirmClearTimeout);
+            } else {
+              btnClearHistory.setAttribute('data-confirming', 'true');
+              btnClearHistory.innerHTML = '<span>⚠️ Yakin Hapus Semua? Klik Lagi</span>';
+              confirmClearTimeout = setTimeout(function () {
+                btnClearHistory.removeAttribute('data-confirming');
+                btnClearHistory.innerHTML = '<span>🗑️ Hapus Riwayat</span>';
+              }, 4000);
+            }
+          });
+        }
+
+        // Buka Layar Login Siswa Baru
+        if (btnBukaLoginBaru) {
+          btnBukaLoginBaru.addEventListener('click', function () {
+            tutupModalAdmin();
+            if (loginOverlay) {
+              loginOverlay.style.display = 'flex';
+              if (inputNama) {
+                inputNama.value = '';
+                inputNama.focus();
+              }
+            }
+          });
+        }
+
+        // Tutup modal jika mengklik backdrop gelap di luar kartu
+        if (adminModal) {
+          adminModal.addEventListener('click', function (e) {
+            if (e.target === adminModal) {
+              tutupModalAdmin();
+            }
+          });
+        }
+      })();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

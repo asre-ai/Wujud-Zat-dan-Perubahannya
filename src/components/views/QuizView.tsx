@@ -70,6 +70,21 @@ export const QuizView: React.FC<QuizViewProps> = ({ onNavigate, onUpdateProgress
         quizScore: totalScore,
         badgeUnlocked: badge,
       });
+
+      // Sinkronkan skor kuis ke histori_energi di localStorage untuk Panel Guru
+      try {
+        const rawHistory = localStorage.getItem('histori_energi');
+        if (rawHistory) {
+          const list = JSON.parse(rawHistory);
+          if (Array.isArray(list) && list.length > 0) {
+            // Perbarui entri siswa terakhir yang sedang aktif
+            list[list.length - 1].skor = totalScore;
+            localStorage.setItem('histori_energi', JSON.stringify(list));
+          }
+        }
+      } catch {
+        // Fallback jika localStorage tidak dapat diakses
+      }
     }
   };
 
