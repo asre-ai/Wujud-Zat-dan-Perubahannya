@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { TransitionType, EverydayExample } from '../../types';
 import { TRANSITIONS_DATA, EVERYDAY_EXAMPLES } from '../../data/learningData';
 import { Transition3DViewer } from '../3d/Transition3DViewer';
@@ -19,6 +20,24 @@ export const TransitionsView: React.FC = () => {
     sound.playPop();
     setActiveTransition(type);
   };
+
+  // Lock scroll and listen to Escape when example popup is open
+  useEffect(() => {
+    if (selectedExample) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setSelectedExample(null);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [selectedExample]);
 
   // Compute result for "Coba Sendiri"
   const getSimResult = () => {
@@ -462,8 +481,8 @@ export const TransitionsView: React.FC = () => {
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-sky-600">
-                <span>Pelajari sainsnya</span>
+              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-sky-600 font-heading">
+                <span>Pelajari selengkapnya ✨</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
@@ -471,50 +490,63 @@ export const TransitionsView: React.FC = () => {
         </div>
       </section>
 
-      {/* Modal for Everyday Example Detail */}
-      {selectedExample && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-200">
-            <button
-              onClick={() => setSelectedExample(null)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="text-4xl mb-3">{selectedExample.emoji}</div>
-            <span className={`text-xs font-bold px-3 py-1 rounded-full ${selectedExample.iconBg}`}>
-              Perubahan: {selectedExample.transitionName}
-            </span>
-            <h3 className="text-xl font-extrabold text-slate-900 font-heading mt-3">
-              {selectedExample.title}
-            </h3>
-
-            <p className="text-sm text-slate-700 mt-2 font-medium">
-              {selectedExample.description}
-            </p>
-
-            <div className="mt-4 p-4 rounded-2xl bg-sky-50 border border-sky-100 text-xs text-slate-700">
-              <strong className="text-sky-900 block font-bold mb-1">
-                🔬 Fakta Sains SD:
-              </strong>
-              {selectedExample.scienceDetail}
-            </div>
-
-            <button
-              onClick={() => {
-                sound.playPop();
-                setActiveTransition(selectedExample.transitionType);
+      {/* Modal for Everyday Example Detail (Portalled to document.body so it is always on screen) */}
+      {selectedExample &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
                 setSelectedExample(null);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="mt-5 w-full py-3 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-md shadow-sky-600/20 transition-all cursor-pointer"
+              }
+            }}
+          >
+            <div
+              className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border-2 border-slate-200 relative animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
             >
-              Lihat Simulasi 3D {selectedExample.transitionName} ➜
-            </button>
-          </div>
-        </div>
-      )}
+              <button
+                onClick={() => setSelectedExample(null)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
+                title="Tutup"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="text-4xl mb-3">{selectedExample.emoji}</div>
+              <span className={`text-xs font-black px-3 py-1 rounded-full border shadow-2xs font-heading ${selectedExample.iconBg}`}>
+                Perubahan: {selectedExample.transitionName}
+              </span>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 font-heading mt-3">
+                {selectedExample.title}
+              </h3>
+
+              <p className="text-sm font-bold text-slate-700 mt-2 leading-relaxed">
+                {selectedExample.description}
+              </p>
+
+              <div className="mt-4 p-4 rounded-2xl bg-sky-50 border-2 border-sky-200 text-xs sm:text-sm text-slate-800">
+                <strong className="text-sky-950 block font-black text-xs uppercase tracking-wide mb-1 font-heading">
+                  🔬 Fakta Sains SD:
+                </strong>
+                <span className="font-bold leading-relaxed block">{selectedExample.scienceDetail}</span>
+              </div>
+
+              <button
+                onClick={() => {
+                  sound.playPop();
+                  setActiveTransition(selectedExample.transitionType);
+                  setSelectedExample(null);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="mt-5 w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-black text-xs sm:text-sm shadow-md shadow-sky-600/25 transition-all cursor-pointer font-heading flex items-center justify-center gap-2"
+              >
+                <span>Lihat Simulasi 3D {selectedExample.transitionName} ➜</span>
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

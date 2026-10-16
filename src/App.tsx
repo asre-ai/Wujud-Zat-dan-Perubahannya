@@ -14,6 +14,7 @@ import { StatesView } from './components/views/StatesView';
 import { LabView } from './components/views/LabView';
 import { TransitionsView } from './components/views/TransitionsView';
 import { QuizView } from './components/views/QuizView';
+import { TopScorersModal } from './components/common/TopScorersModal';
 
 const STORAGE_KEY = 'zat_3d_user_progress_v1';
 
@@ -31,6 +32,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<NavPage>('home');
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isDeveloperOpen, setIsDeveloperOpen] = useState(false);
+  const [isTopScorersOpen, setIsTopScorersOpen] = useState(false);
   const [progress, setProgress] = useState<UserProgress>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -40,6 +42,27 @@ export default function App() {
     }
     return defaultProgress;
   });
+
+  // Global event listener for opening top scorers and navigating from any script/overlay
+  useEffect(() => {
+    const handleOpenEvent = () => setIsTopScorersOpen(true);
+    const handleNavEvent = (e: any) => {
+      const targetPage = e?.detail || 'home';
+      handleNavigate(targetPage);
+    };
+
+    window.addEventListener('open-top-scorers', handleOpenEvent);
+    window.addEventListener('navigate-to-page', handleNavEvent);
+    (window as any).openTopScorers = () => setIsTopScorersOpen(true);
+    (window as any).navigateToPage = (page: NavPage) => handleNavigate(page);
+
+    return () => {
+      window.removeEventListener('open-top-scorers', handleOpenEvent);
+      window.removeEventListener('navigate-to-page', handleNavEvent);
+      delete (window as any).openTopScorers;
+      delete (window as any).navigateToPage;
+    };
+  }, []);
 
   // Save progress
   useEffect(() => {
@@ -80,13 +103,18 @@ export default function App() {
         badgeUnlocked={progress.badgeUnlocked}
         onOpenHelp={() => setIsHelpOpen(true)}
         onOpenDeveloper={() => setIsDeveloperOpen(true)}
+        onOpenTopScorers={() => setIsTopScorersOpen(true)}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 w-full max-w-7xl mx-auto pt-4 sm:pt-6 px-3 sm:px-6 pb-12">
         <div key={currentPage} className="animate-storybook-slide w-full">
           {currentPage === 'home' && (
-            <HomeView onNavigate={handleNavigate} progress={progress} />
+            <HomeView
+              onNavigate={handleNavigate}
+              progress={progress}
+              onOpenTopScorers={() => setIsTopScorersOpen(true)}
+            />
           )}
           {currentPage === 'states' && <StatesView />}
           {currentPage === 'lab' && <LabView />}
@@ -95,6 +123,7 @@ export default function App() {
             <QuizView
               onNavigate={handleNavigate}
               onUpdateProgress={handleUpdateProgress}
+              onOpenTopScorers={() => setIsTopScorersOpen(true)}
             />
           )}
         </div>
@@ -150,6 +179,13 @@ export default function App() {
             >
               👤 Info Pengembang
             </button>
+            <span className="text-slate-300 hidden sm:inline">|</span>
+            <button
+              onClick={() => setIsTopScorersOpen(true)}
+              className="text-amber-700 hover:text-amber-900 font-black transition-colors cursor-pointer inline-flex items-center gap-1"
+            >
+              🏆 Top Scorers
+            </button>
           </div>
         </div>
       </footer>
@@ -165,6 +201,12 @@ export default function App() {
       <DeveloperModal
         isOpen={isDeveloperOpen}
         onClose={() => setIsDeveloperOpen(false)}
+      />
+
+      {/* Top Scorers Leaderboard Dialog */}
+      <TopScorersModal
+        isOpen={isTopScorersOpen}
+        onClose={() => setIsTopScorersOpen(false)}
       />
     </div>
   );

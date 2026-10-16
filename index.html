@@ -701,7 +701,12 @@
             <h2>⚙️ Panel Guru — Riwayat Siswa</h2>
             <span id="ui-admin-badge">histori_energi</span>
           </div>
-          <button id="ui-admin-btn-close-x" type="button" title="Tutup Panel">&times;</button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="ui-btn-header-beranda" class="ui-admin-btn-action" type="button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: 2px solid #047857; font-weight: 800; padding: 6px 14px; border-radius: 12px; cursor: pointer;" title="Akses Beranda & Seluruh Fitur Web Seperti Siswa">
+              <span>🏠 Beranda</span>
+            </button>
+            <button id="ui-admin-btn-close-x" type="button" title="Tutup Panel">&times;</button>
+          </div>
         </div>
 
         <!-- Summary Stats -->
@@ -722,6 +727,21 @@
 
         <!-- Table Body -->
         <div id="ui-admin-body">
+          <!-- Filter Bar Guru (Nilai Tertinggi vs Semua Percobaan) -->
+          <div style="padding: 10px 18px; background: #f8fafc; border-bottom: 1.5px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #334155;">
+              <span>🛡️ Saring Nilai Siswa:</span>
+            </div>
+            <div style="display: inline-flex; gap: 6px;">
+              <button id="ui-btn-filter-highest" type="button" style="padding: 6px 12px; font-size: 12px; font-weight: 800; border-radius: 8px; border: 1.5px solid #059669; background: #10b981; color: #ffffff; cursor: pointer; transition: all 0.15s;" title="Mengambil hanya nilai tertinggi per nama siswa (Aman dari nama ganda)">
+                ⭐ Nilai Tertinggi Saja
+              </button>
+              <button id="ui-btn-filter-all" type="button" style="padding: 6px 12px; font-size: 12px; font-weight: 700; border-radius: 8px; border: 1.5px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer; transition: all 0.15s;" title="Tampilkan semua rekam jejak percobaan lengkap">
+                📋 Semua Percobaan
+              </button>
+            </div>
+          </div>
+
           <div id="ui-table-container">
             <table id="ui-admin-table">
               <thead>
@@ -748,8 +768,17 @@
         <!-- Footer Actions -->
         <div id="ui-admin-footer">
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button id="ui-btn-ke-beranda" class="ui-admin-btn-action" type="button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: 2px solid #047857; font-weight: 800; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);" title="Masuk ke Beranda dan jelajahi web media pembelajaran seperti siswa">
+              <span>🏠 Beranda (Akses Web)</span>
+            </button>
+            <button id="ui-btn-open-top-scorers" class="ui-admin-btn-action" type="button" style="background: #fef3c7; color: #78350f; border-color: #f59e0b; font-weight: bold;">
+              <span>🏆 Top 5 Scorers</span>
+            </button>
             <button id="ui-btn-buka-login-baru" class="ui-admin-btn-action" type="button">
               <span>👤 Buka Login Siswa Baru</span>
+            </button>
+            <button id="ui-btn-export-rekap-admin" class="ui-admin-btn-action" type="button" style="background: #0284c7; color: #fff; border-color: #0284c7;">
+              <span>📥 Rekap Nilai Kuis (CSV)</span>
             </button>
             <button id="ui-btn-clear-history" class="ui-admin-btn-action" type="button">
               <span>🗑️ Hapus Riwayat</span>
@@ -792,6 +821,10 @@
         var btnTutupAdmin = document.getElementById('ui-btn-tutup-admin');
         var btnClearHistory = document.getElementById('ui-btn-clear-history');
         var btnBukaLoginBaru = document.getElementById('ui-btn-buka-login-baru');
+        var btnExportRekapAdmin = document.getElementById('ui-btn-export-rekap-admin');
+        var btnOpenTopScorers = document.getElementById('ui-btn-open-top-scorers');
+        var btnKeBeranda = document.getElementById('ui-btn-ke-beranda');
+        var btnHeaderBeranda = document.getElementById('ui-btn-header-beranda');
 
         var tableBody = document.getElementById('ui-admin-table-body');
         var emptyState = document.getElementById('ui-empty-state');
@@ -863,6 +896,10 @@
             skor: 0
           });
           saveHistori(list);
+          try {
+            localStorage.setItem('siswa_aktif_nama', nama);
+            window.dispatchEvent(new CustomEvent('siswa-login-success', { detail: nama }));
+          } catch (e) {}
 
           // Sembunyikan layar login agar anak bisa langsung melihat canvas 3D
           if (loginOverlay) {
@@ -886,12 +923,78 @@
           }, 200);
         }
 
-        // 2. Render Tabel Admin dari localStorage (histori_energi)
+        // 2. Render Tabel Admin dari localStorage (histori_energi) dengan Saringan Nilai Tertinggi
+        var filterHighestBtn = document.getElementById('ui-btn-filter-highest');
+        var filterAllBtn = document.getElementById('ui-btn-filter-all');
+        var currentAdminFilter = 'highest';
+
+        function updateFilterButtonStyles() {
+          if (!filterHighestBtn || !filterAllBtn) return;
+          if (currentAdminFilter === 'highest') {
+            filterHighestBtn.style.background = '#10b981';
+            filterHighestBtn.style.color = '#ffffff';
+            filterHighestBtn.style.borderColor = '#059669';
+            filterHighestBtn.style.fontWeight = '800';
+
+            filterAllBtn.style.background = '#ffffff';
+            filterAllBtn.style.color = '#475569';
+            filterAllBtn.style.borderColor = '#cbd5e1';
+            filterAllBtn.style.fontWeight = '700';
+          } else {
+            filterAllBtn.style.background = '#10b981';
+            filterAllBtn.style.color = '#ffffff';
+            filterAllBtn.style.borderColor = '#059669';
+            filterAllBtn.style.fontWeight = '800';
+
+            filterHighestBtn.style.background = '#ffffff';
+            filterHighestBtn.style.color = '#475569';
+            filterHighestBtn.style.borderColor = '#cbd5e1';
+            filterHighestBtn.style.fontWeight = '700';
+          }
+        }
+
+        if (filterHighestBtn) {
+          filterHighestBtn.addEventListener('click', function () {
+            currentAdminFilter = 'highest';
+            updateFilterButtonStyles();
+            renderAdminTable();
+          });
+        }
+
+        if (filterAllBtn) {
+          filterAllBtn.addEventListener('click', function () {
+            currentAdminFilter = 'all';
+            updateFilterButtonStyles();
+            renderAdminTable();
+          });
+        }
+
         function renderAdminTable() {
-          var list = getHistori();
+          var rawList = getHistori();
           if (!tableBody) return;
 
           tableBody.innerHTML = '';
+
+          var list = [];
+          if (currentAdminFilter === 'highest') {
+            // Saring hanya nilai tertinggi per nama siswa (Aman dari nama ganda / sabotase nilai teman)
+            var map = {};
+            rawList.forEach(function (item) {
+              var nameKey = (item.nama || 'Siswa').trim().toLowerCase();
+              var score = typeof item.skor === 'number' ? item.skor : parseInt(item.skor || 0, 10) || 0;
+              if (!map[nameKey] || score > map[nameKey].skor) {
+                map[nameKey] = {
+                  nama: (item.nama || 'Siswa').trim(),
+                  waktu: item.waktu || '-',
+                  skor: score
+                };
+              }
+            });
+            list = Object.keys(map).map(function (k) { return map[k]; });
+            list.sort(function (a, b) { return b.skor - a.skor; });
+          } else {
+            list = rawList;
+          }
 
           if (list.length === 0) {
             if (tableContainer) tableContainer.style.display = 'none';
@@ -925,7 +1028,7 @@
             tableBody.appendChild(tr);
           });
 
-          if (statTotal) statTotal.textContent = list.length.toString();
+          if (statTotal) statTotal.textContent = list.length.toString() + (currentAdminFilter === 'highest' ? ' Siswa' : ' Rekam');
           if (statAvg) statAvg.textContent = Math.round(totalSkor / list.length).toString();
           if (statLast) statLast.textContent = list[list.length - 1].nama || '-';
         }
@@ -1025,12 +1128,119 @@
         if (btnCloseX) btnCloseX.addEventListener('click', tutupModalAdmin);
         if (btnTutupAdmin) btnTutupAdmin.addEventListener('click', tutupModalAdmin);
 
+        // 5. Akses Beranda & Web untuk Guru (Bisa berselancar seperti siswa)
+        function aksesBerandaGuru() {
+          tutupModalAdmin();
+
+          // Sembunyikan overlay login siswa agar guru dapat langsung mengakses seluruh fitur dan materi web
+          if (loginOverlay) {
+            loginOverlay.style.display = 'none';
+          }
+
+          // Catat nama aktif sebagai Bapak/Ibu Guru jika belum ada siswa aktif
+          try {
+            var curName = localStorage.getItem('siswa_aktif_nama');
+            if (!curName || curName.trim() === '') {
+              localStorage.setItem('siswa_aktif_nama', 'Bapak/Ibu Guru');
+            }
+            window.dispatchEvent(new CustomEvent('siswa-login-success', { detail: localStorage.getItem('siswa_aktif_nama') || 'Bapak/Ibu Guru' }));
+          } catch (e) {}
+
+          // Navigasi ke halaman Beranda di aplikasi web React
+          window.dispatchEvent(new CustomEvent('navigate-to-page', { detail: 'home' }));
+          if (typeof window.navigateToPage === 'function') {
+            window.navigateToPage('home');
+          }
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        if (btnKeBeranda) btnKeBeranda.addEventListener('click', aksesBerandaGuru);
+        if (btnHeaderBeranda) btnHeaderBeranda.addEventListener('click', aksesBerandaGuru);
+
+        // Export Rekap Nilai Kuis (CSV) dari Admin Modal
+        if (btnExportRekapAdmin) {
+          btnExportRekapAdmin.addEventListener('click', function () {
+            try {
+              var raw = localStorage.getItem('riwayatKuisEnergi');
+              var list = raw ? JSON.parse(raw) : [];
+              if (!Array.isArray(list) || list.length === 0) {
+                // Jika belum ada kuis selesai, tawarkan ekspor dari histori_energi
+                var fallbackList = getHistori();
+                if (fallbackList.length === 0) {
+                  alert('Belum ada data nilai kuis siswa yang tersimpan.');
+                  return;
+                }
+                list = fallbackList.map(function (item) {
+                  return {
+                    nama: item.nama,
+                    waktu: item.waktu,
+                    jumlahBenar: Math.round((item.skor || 0) / 10),
+                    jumlahSalah: 10 - Math.round((item.skor || 0) / 10),
+                    nilaiAkhir: item.skor || 0
+                  };
+                });
+              }
+
+              if (currentAdminFilter === 'highest' && list.length > 0) {
+                var mapExport = {};
+                list.forEach(function (row) {
+                  var k = (row.nama || 'Siswa').trim().toLowerCase();
+                  var sc = row.nilaiAkhir != null ? row.nilaiAkhir : 0;
+                  if (!mapExport[k] || sc > mapExport[k].nilaiAkhir) {
+                    mapExport[k] = row;
+                  }
+                });
+                list = Object.keys(mapExport).map(function (k) { return mapExport[k]; });
+                list.sort(function (a, b) { return (b.nilaiAkhir || 0) - (a.nilaiAkhir || 0); });
+              }
+
+              var csv = '\uFEFFNo,Nama Siswa,Waktu/Tanggal,Jumlah Benar,Jumlah Salah,Nilai Akhir,Keterangan\r\n';
+              list.forEach(function (row, idx) {
+                var safeName = '"' + (row.nama || 'Siswa').replace(/"/g, '""') + '"';
+                var safeWaktu = '"' + (row.waktu || '-').replace(/"/g, '""') + '"';
+                var ket = currentAdminFilter === 'highest' ? 'Nilai Tertinggi' : 'Percobaan';
+                csv += (idx + 1) + ',' + safeName + ',' + safeWaktu + ',' + (row.jumlahBenar != null ? row.jumlahBenar : 0) + ',' + (row.jumlahSalah != null ? row.jumlahSalah : 0) + ',' + (row.nilaiAkhir != null ? row.nilaiAkhir : 0) + ',' + ket + '\r\n';
+              });
+
+              var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+              var url = URL.createObjectURL(blob);
+              var a = document.createElement('a');
+              a.href = url;
+              var filename = currentAdminFilter === 'highest' ? 'Rekap_Kelas_Nilai_Tertinggi.csv' : 'Rekap_Kelas_Semua_Percobaan.csv';
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            } catch (err) {
+              console.error('Gagal mengekspor CSV:', err);
+              alert('Terjadi kesalahan saat mengekspor data CSV.');
+            }
+          });
+        }
+
+        // Buka Modal Top Scorers dari Admin Modal
+        if (btnOpenTopScorers) {
+          btnOpenTopScorers.addEventListener('click', function () {
+            window.dispatchEvent(new CustomEvent('open-top-scorers'));
+            if (typeof window.openTopScorers === 'function') {
+              window.openTopScorers();
+            }
+            if (adminModal) {
+              adminModal.style.display = 'none';
+            }
+          });
+        }
+
         // Hapus Riwayat Belajar Siswa (dengan konfirmasi in-button yang aman di iframe)
         var confirmClearTimeout = null;
         if (btnClearHistory) {
           btnClearHistory.addEventListener('click', function () {
             if (btnClearHistory.getAttribute('data-confirming') === 'true') {
               saveHistori([]);
+              try {
+                localStorage.removeItem('riwayatKuisEnergi');
+              } catch (e) {}
               renderAdminTable();
               btnClearHistory.removeAttribute('data-confirming');
               btnClearHistory.innerHTML = '<span>🗑️ Hapus Riwayat</span>';

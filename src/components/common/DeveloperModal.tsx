@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Mail, Instagram, MapPin, GraduationCap, Copy, Check, ExternalLink, Code2, Sparkles } from 'lucide-react';
 import { sound } from '../../utils/audio';
 
@@ -23,9 +24,20 @@ export const DeveloperModal: React.FC<DeveloperModalProps> = ({ isOpen, onClose 
     setTimeout(() => setCopiedEmail(false), 2000);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border-2 border-indigo-200/90 relative animate-in zoom-in-95 duration-200 overflow-hidden">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          sound.playPop();
+          onClose();
+        }
+      }}
+    >
+      <div
+        className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border-2 border-indigo-200/90 relative animate-in zoom-in-95 duration-200 overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Background decorative glows */}
         <div className="absolute top-0 right-0 w-44 h-44 bg-sky-200/40 rounded-full blur-2xl pointer-events-none -z-10" />
         <div className="absolute bottom-0 left-0 w-44 h-44 bg-amber-200/40 rounded-full blur-2xl pointer-events-none -z-10" />
@@ -162,6 +174,7 @@ export const DeveloperModal: React.FC<DeveloperModalProps> = ({ isOpen, onClose 
           Tutup Informasi
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -1,0 +1,240 @@
+/**
+ * Utilitas Riwayat Kuis & Ekspor CSV
+ * Menyimpan data kuis ke localStorage dengan key: 'riwayatKuisEnergi'
+ * Mendukung Ekspor Siswa (individu) dan Rekap Guru (seluruh kelas)
+ */
+
+export interface QuizHistoryRecord {
+  nama: string;
+  waktu: string;
+  jumlahBenar: number;
+  jumlahSalah: number;
+  nilaiAkhir: number;
+}
+
+export const QUIZ_STORAGE_KEY = 'riwayatKuisEnergi';
+export const ACTIVE_STUDENT_KEY = 'siswa_aktif_nama';
+
+/**
+ * Format tanggal dan waktu standar Indonesia (contoh: 15 Okt 2026, 12:45)
+ */
+export function getWaktuFormatted(): string {
+  const d = new Date();
+  const tgl = d.getDate().toString().padStart(2, '0');
+  const blnArr = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const bln = blnArr[d.getMonth()];
+  const thn = d.getFullYear();
+  const jam = d.getHours().toString().padStart(2, '0');
+  const mnt = d.getMinutes().toString().padStart(2, '0');
+  return `${tgl} ${bln} ${thn}, ${jam}:${mnt}`;
+}
+
+/**
+ * Mendapatkan nama siswa aktif yang sedang belajar
+ */
+export function getActiveStudentName(): string {
+  try {
+    const direct = localStorage.getItem(ACTIVE_STUDENT_KEY);
+    if (direct && direct.trim()) return direct.trim();
+
+    // Fallback dari histori_energi (riwayat login overlay)
+    const rawHistori = localStorage.getItem('histori_energi');
+    if (rawHistori) {
+      const parsed = JSON.parse(rawHistori);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const last = parsed[parsed.length - 1];
+        if (last && last.nama) return last.nama.trim();
+      }
+    }
+  } catch (err) {
+    console.error('Gagal mengambil nama siswa:', err);
+  }
+  return 'Siswa Cilik';
+}
+
+export function setActiveStudentName(name: string): void {
+  try {
+    localStorage.setItem(ACTIVE_STUDENT_KEY, name.trim());
+    window.dispatchEvent(new CustomEvent('siswa-login-success', { detail: name.trim() }));
+    window.dispatchEvent(new Event('storage'));
+  } catch (err) {
+    console.error('Gagal menyimpan nama siswa:', err);
+  }
+}
+
+/**
+ * Mengambil semua riwayat kuis dari localStorage ('riwayatKuisEnergi')
+ * Mendukung opsi 'highest' untuk menyaring nilai tertinggi per nama siswa
+ */
+export function getQuizHistory(filterMode: 'all' | 'highest' = 'all'): QuizHistoryRecord[] {
+  try {
+    const raw = localStorage.getItem(QUIZ_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    const list: QuizHistoryRecord[] = Array.isArray(parsed) ? parsed : [];
+
+    if (filterMode === 'highest') {
+      const map = new Map<string, QuizHistoryRecord>();
+      list.forEach((item) => {
+        const key = (item.nama || 'Siswa').trim().toLowerCase();
+        const existing = map.get(key);
+        // Pertahankan nilai tertinggi. Jika sama, pertahankan yang lebih awal tercatat (data asli)
+        if (!existing || item.nilaiAkhir > existing.nilaiAkhir) {
+          map.set(key, item);
+        }
+      });
+      return Array.from(map.values()).sort((a, b) => b.nilaiAkhir - a.nilaiAkhir);
+    }
+
+    return list;
+  } catch (err) {
+    console.error('Gagal membaca riwayatKuisEnergi:', err);
+    return [];
+  }
+}
+
+/**
+ * Menyimpan satu hasil kuis baru ke localStorage ('riwayatKuisEnergi' & 'histori_energi')
+ * SISTEM REKAM JEJAK (APPEND-ONLY): Selalu PUSH entri baru, TIDAK PERNAH menimpa (overwrite)
+ * data teman yang namanya sama demi keamanan dari sabotase/kejahilan siswa.
+ */
+export function saveQuizResult(data: {
+  nama: string;
+  jumlahBenar: number;
+  jumlahSalah: number;
+  nilaiAkhir: number;
+}): QuizHistoryRecord {
+  const newRecord: QuizHistoryRecord = {
+    nama: data.nama || getActiveStudentName(),
+    waktu: getWaktuFormatted(),
+    jumlahBenar: data.jumlahBenar,
+    jumlahSalah: data.jumlahSalah,
+    nilaiAkhir: data.nilaiAkhir,
+  };
+
+  try {
+    // 1. Simpan ke riwayatKuisEnergi (Append-Only / Push)
+    const history = getQuizHistory('all');
+    history.push(newRecord);
+    localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(history));
+
+    // 2. Simpan juga ke histori_energi (Append-Only / Push murni, tanpa overwrite!)
+    // Jika ada anak lain memakai nama teman dan mendapat nilai jelek, nilai asli teman tetap aman tersimpan.
+    const studentName = data.nama || getActiveStudentName();
+    const rawLogin = localStorage.getItem('histori_energi');
+    let loginList: any[] = [];
+    if (rawLogin) {
+      try {
+        const parsed = JSON.parse(rawLogin);
+        if (Array.isArray(parsed)) loginList = parsed;
+      } catch (e) {}
+    }
+
+    // APPEND-ONLY: Selalu tambahkan riwayat percobaan baru
+    loginList.push({
+      nama: studentName,
+      waktu: newRecord.waktu,
+      skor: data.nilaiAkhir,
+      jumlahBenar: data.jumlahBenar,
+      jumlahSalah: data.jumlahSalah,
+    });
+    localStorage.setItem('histori_energi', JSON.stringify(loginList));
+
+    // Picu event storage agar pembaruan langsung sinkron ke seluruh UI
+    window.dispatchEvent(new Event('storage'));
+  } catch (err) {
+    console.error('Gagal menyimpan hasil kuis:', err);
+  }
+
+  return newRecord;
+}
+
+/**
+ * Trigger pengunduhan file CSV di browser
+ */
+function triggerCsvDownload(csvString: string, filename: string): void {
+  // \uFEFF adalah BOM UTF-8 agar Microsoft Excel mengenali karakter dengan rapi
+  const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * 1. UNDUHAN SISWA:
+ * Mengubah data kuis individu yang baru saja dimainkan menjadi file CSV (misal: Nilai_Budi.csv)
+ */
+export function exportStudentCsv(record: QuizHistoryRecord): void {
+  const sanitizeName = (record.nama || 'Siswa').replace(/[^a-zA-Z0-9_\-]/g, '_');
+  const filename = `Nilai_${sanitizeName}.csv`;
+
+  const escapeCsv = (str: string) => `"${str.replace(/"/g, '""')}"`;
+
+  const csvRows = [
+    ['Nama', 'Waktu/Tanggal', 'Jumlah Benar', 'Jumlah Salah', 'Nilai Akhir'].join(','),
+    [
+      escapeCsv(record.nama),
+      escapeCsv(record.waktu),
+      record.jumlahBenar,
+      record.jumlahSalah,
+      record.nilaiAkhir,
+    ].join(','),
+  ];
+
+  triggerCsvDownload(csvRows.join('\r\n'), filename);
+}
+
+/**
+ * 2. UNDUHAN GURU:
+ * Mengambil seluruh data array dari localStorage ('riwayatKuisEnergi')
+ * dan mengekspornya menjadi satu tabel CSV rapi berisi riwayat semua anak (misal: Rekap_Kelas_Energi.csv)
+ */
+export function exportTeacherCsv(filterMode: 'all' | 'highest' = 'all'): { success: boolean; count: number; filename: string } {
+  const list = getQuizHistory(filterMode);
+
+  if (list.length === 0) {
+    return { success: false, count: 0, filename: '' };
+  }
+
+  const escapeCsv = (str: string) => `"${str.replace(/"/g, '""')}"`;
+
+  const csvRows = [
+    ['No', 'Nama Siswa', 'Waktu/Tanggal', 'Jumlah Benar', 'Jumlah Salah', 'Nilai Akhir', 'Keterangan'].join(','),
+  ];
+
+  list.forEach((item, index) => {
+    csvRows.push(
+      [
+        index + 1,
+        escapeCsv(item.nama || 'Siswa'),
+        escapeCsv(item.waktu || '-'),
+        item.jumlahBenar ?? 0,
+        item.jumlahSalah ?? 0,
+        item.nilaiAkhir ?? 0,
+        filterMode === 'highest' ? 'Nilai Tertinggi Siswa' : 'Riwayat Percobaan',
+      ].join(',')
+    );
+  });
+
+  const filename = filterMode === 'highest' ? 'Rekap_Kelas_Nilai_Tertinggi.csv' : 'Rekap_Kelas_Semua_Percobaan.csv';
+  triggerCsvDownload(csvRows.join('\r\n'), filename);
+  return { success: true, count: list.length, filename };
+}
+
+/**
+ * 3. RESET DATA GURU:
+ * Menghapus data riwayatKuisEnergi dari localStorage jika kelas sudah selesai dan berganti ke kelas baru
+ */
+export function resetQuizHistory(): void {
+  try {
+    localStorage.removeItem(QUIZ_STORAGE_KEY);
+  } catch (err) {
+    console.error('Gagal mereset riwayatKuisEnergi:', err);
+  }
+}

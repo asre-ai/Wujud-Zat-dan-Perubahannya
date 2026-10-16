@@ -1,15 +1,30 @@
 import React, { useState } from 'react';
 import { NavPage, UserProgress } from '../../types';
 import { STATES_DATA, FUN_FACTS } from '../../data/learningData';
-import { ArrowRight, Sparkles, Award, Lightbulb, Play, BookOpen, FlaskConical, RefreshCw } from 'lucide-react';
+import {
+  ArrowRight,
+  Sparkles,
+  Award,
+  Lightbulb,
+  Play,
+  BookOpen,
+  FlaskConical,
+  RefreshCw,
+  Trophy,
+} from 'lucide-react';
 import { sound } from '../../utils/audio';
 
 interface HomeViewProps {
   onNavigate: (page: NavPage) => void;
   progress: UserProgress;
+  onOpenTopScorers?: () => void;
 }
 
-export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, progress }) => {
+export const HomeView: React.FC<HomeViewProps> = ({
+  onNavigate,
+  progress,
+  onOpenTopScorers,
+}) => {
   const [activeFactIdx, setActiveFactIdx] = useState(0);
 
   const handleNextFact = () => {
@@ -83,6 +98,20 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, progress }) => {
             >
               <span>🔬 COBA EKSPERIMEN</span>
             </button>
+
+            {onOpenTopScorers && (
+              <button
+                onClick={() => {
+                  sound.playPop();
+                  onOpenTopScorers();
+                }}
+                className="w-full mt-1 sm:mt-2 py-3 px-4 rounded-[22px] bg-gradient-to-r from-amber-100 via-yellow-100 to-amber-200 hover:from-amber-200 hover:to-yellow-200 text-amber-950 font-black text-xs sm:text-sm border-2 border-amber-300 shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 font-heading"
+                title="Lihat 5 Siswa dengan Nilai Tertinggi (Medali Emas, Perak, Perunggu)"
+              >
+                <Trophy className="w-4 h-4 text-amber-900" />
+                <span>🏆 Papan Juara: Lihat Top 5 Scorers Kelas</span>
+              </button>
+            )}
           </div>
         </div>
       </section>

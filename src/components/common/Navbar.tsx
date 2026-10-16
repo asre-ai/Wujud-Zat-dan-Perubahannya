@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavPage } from '../../types';
-import { Volume2, VolumeX, HelpCircle, Award, Sparkles, User } from 'lucide-react';
+import { Volume2, VolumeX, HelpCircle, Award, User, Trophy, Lock } from 'lucide-react';
 import { sound } from '../../utils/audio';
+import { getActiveStudentName } from '../../utils/quizHistory';
 
 interface NavbarProps {
   currentPage: NavPage;
   onNavigate: (page: NavPage) => void;
   badgeUnlocked: 'none' | 'explorer' | 'expert';
   onOpenHelp: () => void;
-  onOpenDeveloper: () => void;
+  onOpenDeveloper?: () => void;
+  onOpenTopScorers: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -16,9 +18,47 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   badgeUnlocked,
   onOpenHelp,
-  onOpenDeveloper,
+  onOpenTopScorers,
 }) => {
   const [soundEnabled, setSoundEnabled] = useState(sound.isEnabled());
+  const [studentName, setStudentName] = useState<string>(() => getActiveStudentName());
+
+  useEffect(() => {
+    const syncStudentName = () => {
+      setStudentName(getActiveStudentName());
+    };
+
+    window.addEventListener('storage', syncStudentName);
+    window.addEventListener('siswa-login-success', syncStudentName);
+    const interval = setInterval(syncStudentName, 1500);
+
+    return () => {
+      window.removeEventListener('storage', syncStudentName);
+      window.removeEventListener('siswa-login-success', syncStudentName);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const isQuizPage = currentPage === 'quiz';
+
+  const handleStudentNameClick = () => {
+    sound.playPop();
+    if (isQuizPage) {
+      sound.playWrong();
+      alert('🔒 Nama siswa terkunci selama kuis dan rekap nilai berlangsung demi keamanan nilai!');
+      return;
+    }
+    const loginOverlay = document.getElementById('ui-login-energi');
+    if (loginOverlay) {
+      loginOverlay.style.display = 'flex';
+      const input = document.getElementById('ui-login-input') as HTMLInputElement | null;
+      if (input) {
+        input.value = studentName && studentName !== 'Siswa Cilik' ? studentName : '';
+        input.focus();
+        input.select();
+      }
+    }
+  };
 
   const handleSoundToggle = () => {
     const newState = sound.toggleSound();
@@ -121,6 +161,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
+          {/* Top Scorers Leaderboard Modal Toggle */}
+          <button
+            onClick={() => {
+              sound.playPop();
+              onOpenTopScorers();
+            }}
+            className="h-7 sm:h-9 px-2 sm:px-3 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-500 hover:to-yellow-400 border-2 border-amber-300 text-amber-950 font-black text-xs flex items-center gap-1 sm:gap-1.5 transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95 shrink-0"
+            title="Papan Peringkat Top 5 Scorers (histori_energi)"
+          >
+            <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-900" />
+            <span className="hidden sm:inline">Top Scorers</span>
+          </button>
+
           {/* Sound ON/OFF Toggle (Target CSS selector 3) */}
           <button
             onClick={handleSoundToggle}
@@ -146,16 +199,35 @@ export const Navbar: React.FC<NavbarProps> = ({
             <HelpCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
 
-          {/* Developer Profile Toggle (Target CSS selector 1) */}
+          {/* Tombol Profil & Nama Siswa yang Login (Target CSS selector 1) */}
           <button
-            onClick={() => {
-              sound.playPop();
-              onOpenDeveloper();
-            }}
-            className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-indigo-50 border-2 border-indigo-200 text-indigo-700 hover:bg-indigo-100 flex items-center justify-center transition-colors cursor-pointer shadow-2xs group shrink-0"
-            title="Identitas Pengembang: Muhammad Asri"
+            onClick={handleStudentNameClick}
+            className={`h-7 sm:h-9 px-2 sm:px-3 rounded-xl sm:rounded-2xl border-2 text-xs flex items-center gap-1.5 transition-all shrink-0 group ${
+              isQuizPage
+                ? 'bg-amber-50/95 border-amber-300 text-amber-950 cursor-not-allowed shadow-2xs'
+                : 'bg-indigo-50/95 hover:bg-indigo-100 border-indigo-200 text-indigo-950 hover:scale-105 active:scale-95 cursor-pointer shadow-2xs'
+            }`}
+            title={
+              isQuizPage
+                ? `🔒 Nama Terkunci: ${studentName} (Tidak dapat diganti selama kuis berlangsung)`
+                : `Siswa Aktif: ${studentName} (Klik untuk ganti siswa / ubah nama)`
+            }
           >
-            <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform" />
+            <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full text-white flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0 shadow-2xs transition-transform ${
+              isQuizPage ? 'bg-gradient-to-tr from-amber-600 to-orange-500' : 'bg-gradient-to-tr from-indigo-600 to-sky-500 group-hover:scale-110'
+            }`}>
+              {isQuizPage ? <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <User className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
+            </div>
+            <span className={`max-w-[70px] sm:max-w-[110px] md:max-w-[140px] truncate font-black text-xs ${
+              isQuizPage ? 'text-amber-950' : 'text-indigo-900 group-hover:text-indigo-950'
+            }`}>
+              {studentName}
+            </span>
+            {isQuizPage && (
+              <span className="text-[10px] text-amber-700 font-extrabold hidden sm:inline" title="Nama Terkunci">
+                🔒
+              </span>
+            )}
           </button>
         </div>
       </div>
