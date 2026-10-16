@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavPage } from '../../types';
 import { Volume2, VolumeX, HelpCircle, Award, User, Trophy, Lock } from 'lucide-react';
 import { sound } from '../../utils/audio';
-import { getActiveStudentName } from '../../utils/quizHistory';
+import { getActiveStudentName, isTeacherName } from '../../utils/quizHistory';
 
 interface NavbarProps {
   currentPage: NavPage;
@@ -200,35 +200,63 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Tombol Profil & Nama Siswa yang Login (Target CSS selector 1) */}
-          <button
-            onClick={handleStudentNameClick}
-            className={`h-7 sm:h-9 px-2 sm:px-3 rounded-xl sm:rounded-2xl border-2 text-xs flex items-center gap-1.5 transition-all shrink-0 group ${
-              isQuizPage
-                ? 'bg-amber-50/95 border-amber-300 text-amber-950 cursor-not-allowed shadow-2xs'
-                : 'bg-indigo-50/95 hover:bg-indigo-100 border-indigo-200 text-indigo-950 hover:scale-105 active:scale-95 cursor-pointer shadow-2xs'
-            }`}
-            title={
-              isQuizPage
-                ? `🔒 Nama Terkunci: ${studentName} (Tidak dapat diganti selama kuis berlangsung)`
-                : `Siswa Aktif: ${studentName} (Klik untuk ganti siswa / ubah nama)`
-            }
-          >
-            <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full text-white flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0 shadow-2xs transition-transform ${
-              isQuizPage ? 'bg-gradient-to-tr from-amber-600 to-orange-500' : 'bg-gradient-to-tr from-indigo-600 to-sky-500 group-hover:scale-110'
-            }`}>
-              {isQuizPage ? <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <User className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
-            </div>
-            <span className={`max-w-[70px] sm:max-w-[110px] md:max-w-[140px] truncate font-black text-xs ${
-              isQuizPage ? 'text-amber-950' : 'text-indigo-900 group-hover:text-indigo-950'
-            }`}>
-              {studentName}
-            </span>
-            {isQuizPage && (
-              <span className="text-[10px] text-amber-700 font-extrabold hidden sm:inline" title="Nama Terkunci">
-                🔒
-              </span>
-            )}
-          </button>
+          {(() => {
+            const isTeacher = isTeacherName(studentName) || localStorage.getItem('user_role') === 'guru';
+            return (
+              <button
+                onClick={handleStudentNameClick}
+                className={`h-7 sm:h-9 px-2 sm:px-3 rounded-xl sm:rounded-2xl border-2 text-xs flex items-center gap-1.5 transition-all shrink-0 group ${
+                  isQuizPage
+                    ? 'bg-amber-50/95 border-amber-300 text-amber-950 cursor-not-allowed shadow-2xs'
+                    : isTeacher
+                    ? 'bg-sky-50/95 hover:bg-sky-100 border-sky-300 text-sky-950 hover:scale-105 active:scale-95 cursor-pointer shadow-2xs'
+                    : 'bg-indigo-50/95 hover:bg-indigo-100 border-indigo-200 text-indigo-950 hover:scale-105 active:scale-95 cursor-pointer shadow-2xs'
+                }`}
+                title={
+                  isQuizPage
+                    ? `🔒 Kuis Sedang Berlangsung (${studentName})${isTeacher ? ' - Mode Guru: Tidak masuk peringkat' : ' - Nama Terkunci'}`
+                    : isTeacher
+                    ? `👨‍🏫 Mode Guru Aktif: ${studentName} (Nilai kuis Guru tidak masuk papan peringkat siswa)`
+                    : `Siswa Aktif: ${studentName} (Klik untuk ganti siswa / ubah nama)`
+                }
+              >
+                <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full text-white flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0 shadow-2xs transition-transform ${
+                  isQuizPage
+                    ? 'bg-gradient-to-tr from-amber-600 to-orange-500'
+                    : isTeacher
+                    ? 'bg-gradient-to-tr from-sky-600 to-teal-500 group-hover:scale-110'
+                    : 'bg-gradient-to-tr from-indigo-600 to-sky-500 group-hover:scale-110'
+                }`}>
+                  {isQuizPage ? (
+                    <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  ) : isTeacher ? (
+                    <span className="text-[10px]">👨‍🏫</span>
+                  ) : (
+                    <User className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  )}
+                </div>
+                <span className={`max-w-[70px] sm:max-w-[110px] md:max-w-[140px] truncate font-black text-xs ${
+                  isQuizPage
+                    ? 'text-amber-950'
+                    : isTeacher
+                    ? 'text-sky-950 group-hover:text-sky-900'
+                    : 'text-indigo-900 group-hover:text-indigo-950'
+                }`}>
+                  {studentName}
+                </span>
+                {isTeacher && !isQuizPage && (
+                  <span className="text-[9px] bg-sky-200/90 text-sky-950 font-black px-1.5 py-0.5 rounded-full hidden sm:inline border border-sky-300">
+                    Guru
+                  </span>
+                )}
+                {isQuizPage && (
+                  <span className="text-[10px] text-amber-700 font-extrabold hidden sm:inline" title="Nama Terkunci">
+                    🔒
+                  </span>
+                )}
+              </button>
+            );
+          })()}
         </div>
       </div>
     </header>

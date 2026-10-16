@@ -22,9 +22,29 @@ export const SEED_DEMO_SCORERS = [
 ];
 
 /**
+ * Memeriksa apakah suatu catatan berasal dari akun guru / pengajar / admin
+ * Akun guru tidak boleh masuk ke papan peringkat siswa
+ */
+export function isTeacherRecord(nama?: string, item?: any): boolean {
+  if (item && (item.isTeacher === true || item.role === 'guru')) return true;
+  if (!nama) return false;
+  const n = nama.trim().toLowerCase();
+  return (
+    n.includes('guru') ||
+    n.includes('pengajar') ||
+    n.includes('admin') ||
+    n.includes('bapak/ibu') ||
+    n.includes('wali kelas') ||
+    n.startsWith('pak guru') ||
+    n.startsWith('bu guru')
+  );
+}
+
+/**
  * Membaca data dari localStorage key 'histori_energi'
  * Mengelompokkan per siswa (skor tertinggi tiap siswa) atau mengambil sesi terbaik
  * Mengurutkan berdasarkan skor tertinggi (descending) dan mengambil 5 teratas
+ * PENGAMANAN KHUSUS: Akun Guru TIDAK PERNAH dimasukkan ke Papan Peringkat Juara Siswa!
  */
 export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highest'): {
   students: TopScorerStudent[];
@@ -34,7 +54,7 @@ export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highes
 } {
   try {
     const raw = localStorage.getItem('histori_energi');
-    let list: Array<{ nama?: string; waktu?: string; skor?: number }> = [];
+    let list: Array<{ nama?: string; waktu?: string; skor?: number; isTeacher?: boolean; role?: string }> = [];
 
     if (raw) {
       const parsed = JSON.parse(raw);
@@ -57,6 +77,8 @@ export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highes
                   nama: k.nama,
                   waktu: k.waktu || '-',
                   skor: k.nilaiAkhir ?? 0,
+                  isTeacher: k.isTeacher,
+                  role: k.role,
                 });
               }
             });
@@ -66,6 +88,9 @@ export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highes
         }
       }
     }
+
+    // FILTER MUTLAK: Buang semua entri guru / pengajar agar tidak pernah masuk papan peringkat siswa
+    list = list.filter((item) => !isTeacherRecord(item.nama, item));
 
     if (list.length === 0) {
       return {
@@ -85,6 +110,8 @@ export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highes
       list.forEach((item) => {
         const rawName = (item.nama || 'Siswa').trim();
         if (!rawName) return;
+        if (isTeacherRecord(rawName, item)) return;
+
         const key = rawName.toLowerCase();
         const score = typeof item.skor === 'number' ? item.skor : parseInt(String(item.skor || 0), 10) || 0;
         const waktu = item.waktu || '-';
@@ -97,9 +124,9 @@ export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highes
 
       processedList = Array.from(map.values());
     } else {
-      // Mode 'all': tampilkan semua riwayat tanpa deduplikasi
+      // Mode 'all': tampilkan semua riwayat tanpa deduplikasi (tetap tanpa akun guru)
       processedList = list
-        .filter((item) => (item.nama || '').trim() !== '')
+        .filter((item) => (item.nama || '').trim() !== '' && !isTeacherRecord(item.nama, item))
         .map((item) => ({
           nama: (item.nama || 'Siswa').trim(),
           waktu: item.waktu || '-',

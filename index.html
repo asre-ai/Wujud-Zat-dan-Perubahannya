@@ -897,6 +897,8 @@
           });
           saveHistori(list);
           try {
+            localStorage.setItem('user_role', 'siswa');
+            localStorage.removeItem('is_guru');
             localStorage.setItem('siswa_aktif_nama', nama);
             window.dispatchEvent(new CustomEvent('siswa-login-success', { detail: nama }));
           } catch (e) {}
@@ -969,8 +971,25 @@
           });
         }
 
+        function isTeacherEntry(item) {
+          if (!item) return false;
+          if (item.isTeacher === true || item.role === 'guru') return true;
+          var n = (item.nama || '').trim().toLowerCase();
+          return (
+            n.includes('guru') ||
+            n.includes('admin') ||
+            n.includes('pengajar') ||
+            n.includes('bapak/ibu') ||
+            n.includes('wali kelas') ||
+            n.indexOf('pak guru') === 0 ||
+            n.indexOf('bu guru') === 0
+          );
+        }
+
         function renderAdminTable() {
-          var rawList = getHistori();
+          var rawList = getHistori().filter(function (it) {
+            return !isTeacherEntry(it);
+          });
           if (!tableBody) return;
 
           tableBody.innerHTML = '';
@@ -1137,13 +1156,12 @@
             loginOverlay.style.display = 'none';
           }
 
-          // Catat nama aktif sebagai Bapak/Ibu Guru jika belum ada siswa aktif
+          // Catat nama aktif dan peran sebagai Guru
           try {
-            var curName = localStorage.getItem('siswa_aktif_nama');
-            if (!curName || curName.trim() === '') {
-              localStorage.setItem('siswa_aktif_nama', 'Bapak/Ibu Guru');
-            }
-            window.dispatchEvent(new CustomEvent('siswa-login-success', { detail: localStorage.getItem('siswa_aktif_nama') || 'Bapak/Ibu Guru' }));
+            localStorage.setItem('user_role', 'guru');
+            localStorage.setItem('is_guru', 'true');
+            localStorage.setItem('siswa_aktif_nama', 'Bapak/Ibu Guru');
+            window.dispatchEvent(new CustomEvent('siswa-login-success', { detail: 'Bapak/Ibu Guru' }));
           } catch (e) {}
 
           // Navigasi ke halaman Beranda di aplikasi web React
@@ -1180,6 +1198,11 @@
                   };
                 });
               }
+
+              // Saring agar entri guru tidak ikut terunduh dalam rekap nilai siswa
+              list = list.filter(function (row) {
+                return !isTeacherEntry(row);
+              });
 
               if (currentAdminFilter === 'highest' && list.length > 0) {
                 var mapExport = {};
@@ -1260,6 +1283,10 @@
         if (btnBukaLoginBaru) {
           btnBukaLoginBaru.addEventListener('click', function () {
             tutupModalAdmin();
+            try {
+              localStorage.setItem('user_role', 'siswa');
+              localStorage.removeItem('is_guru');
+            } catch (e) {}
             if (loginOverlay) {
               loginOverlay.style.display = 'flex';
               if (inputNama) {

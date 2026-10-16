@@ -10,10 +10,39 @@ export interface QuizHistoryRecord {
   jumlahBenar: number;
   jumlahSalah: number;
   nilaiAkhir: number;
+  isTeacher?: boolean;
 }
 
 export const QUIZ_STORAGE_KEY = 'riwayatKuisEnergi';
 export const ACTIVE_STUDENT_KEY = 'siswa_aktif_nama';
+
+/**
+ * Memeriksa apakah nama atau sesi akun saat ini adalah akun Guru / Pengajar
+ */
+export function isTeacherName(name?: string): boolean {
+  if (!name) return false;
+  const n = name.trim().toLowerCase();
+  return (
+    n.includes('guru') ||
+    n.includes('pengajar') ||
+    n.includes('admin') ||
+    n.includes('bapak/ibu') ||
+    n.includes('wali kelas') ||
+    n.startsWith('pak guru') ||
+    n.startsWith('bu guru')
+  );
+}
+
+export function isCurrentUserTeacher(): boolean {
+  try {
+    const role = localStorage.getItem('user_role');
+    const isGuru = localStorage.getItem('is_guru');
+    if (role === 'guru' || isGuru === 'true') return true;
+    const active = localStorage.getItem(ACTIVE_STUDENT_KEY) || '';
+    if (isTeacherName(active)) return true;
+  } catch (e) {}
+  return false;
+}
 
 /**
  * Format tanggal dan waktu standar Indonesia (contoh: 15 Okt 2026, 12:45)
@@ -42,8 +71,13 @@ export function getActiveStudentName(): string {
     if (rawHistori) {
       const parsed = JSON.parse(rawHistori);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const last = parsed[parsed.length - 1];
-        if (last && last.nama) return last.nama.trim();
+        // Ambil yang bukan guru
+        for (let i = parsed.length - 1; i >= 0; i--) {
+          const item = parsed[i];
+          if (item && item.nama && !isTeacherName(item.nama)) {
+            return item.nama.trim();
+          }
+        }
       }
     }
   } catch (err) {
@@ -65,13 +99,19 @@ export function setActiveStudentName(name: string): void {
 /**
  * Mengambil semua riwayat kuis dari localStorage ('riwayatKuisEnergi')
  * Mendukung opsi 'highest' untuk menyaring nilai tertinggi per nama siswa
+ * Secara default mengecualikan akun guru agar tidak masuk peringkat siswa
  */
-export function getQuizHistory(filterMode: 'all' | 'highest' = 'all'): QuizHistoryRecord[] {
+export function getQuizHistory(filterMode: 'all' | 'highest' = 'all', includeTeacher: boolean = false): QuizHistoryRecord[] {
   try {
     const raw = localStorage.getItem(QUIZ_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    const list: QuizHistoryRecord[] = Array.isArray(parsed) ? parsed : [];
+    let list: QuizHistoryRecord[] = Array.isArray(parsed) ? parsed : [];
+
+    // Filter guru agar tidak mencemari data peringkat siswa
+    if (!includeTeacher) {
+      list = list.filter((item) => !item.isTeacher && !isTeacherName(item.nama));
+    }
 
     if (filterMode === 'highest') {
       const map = new Map<string, QuizHistoryRecord>();
@@ -97,6 +137,10 @@ export function getQuizHistory(filterMode: 'all' | 'highest' = 'all'): QuizHisto
  * Menyimpan satu hasil kuis baru ke localStorage ('riwayatKuisEnergi' & 'histori_energi')
  * SISTEM REKAM JEJAK (APPEND-ONLY): Selalu PUSH entri baru, TIDAK PERNAH menimpa (overwrite)
  * data teman yang namanya sama demi keamanan dari sabotase/kejahilan siswa.
+ *
+ * PENGAMANAN KHUSUS GURU:
+ * Jika yang mengerjakan adalah Guru (login via panel guru atau nama Guru),
+ * datanya TIDAK dimasukkan ke 'histori_energi' agar Guru TIDAK PERNAH masuk Papan Peringkat Top Scorers.
  */
 export function saveQuizResult(data: {
   nama: string;
@@ -104,41 +148,46 @@ export function saveQuizResult(data: {
   jumlahSalah: number;
   nilaiAkhir: number;
 }): QuizHistoryRecord {
+  const isTeacher = isCurrentUserTeacher() || isTeacherName(data.nama);
+
   const newRecord: QuizHistoryRecord = {
     nama: data.nama || getActiveStudentName(),
     waktu: getWaktuFormatted(),
     jumlahBenar: data.jumlahBenar,
     jumlahSalah: data.jumlahSalah,
     nilaiAkhir: data.nilaiAkhir,
+    isTeacher: isTeacher || undefined,
   };
 
   try {
     // 1. Simpan ke riwayatKuisEnergi (Append-Only / Push)
-    const history = getQuizHistory('all');
+    const history = getQuizHistory('all', true);
     history.push(newRecord);
     localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(history));
 
-    // 2. Simpan juga ke histori_energi (Append-Only / Push murni, tanpa overwrite!)
-    // Jika ada anak lain memakai nama teman dan mendapat nilai jelek, nilai asli teman tetap aman tersimpan.
-    const studentName = data.nama || getActiveStudentName();
-    const rawLogin = localStorage.getItem('histori_energi');
-    let loginList: any[] = [];
-    if (rawLogin) {
-      try {
-        const parsed = JSON.parse(rawLogin);
-        if (Array.isArray(parsed)) loginList = parsed;
-      } catch (e) {}
-    }
+    // 2. Simpan juga ke histori_energi HANYA UNTUK SISWA
+    // Guru TIDAK dimasukkan ke histori_energi agar tidak masuk Papan Peringkat / Top Scorers
+    if (!isTeacher) {
+      const studentName = data.nama || getActiveStudentName();
+      const rawLogin = localStorage.getItem('histori_energi');
+      let loginList: any[] = [];
+      if (rawLogin) {
+        try {
+          const parsed = JSON.parse(rawLogin);
+          if (Array.isArray(parsed)) loginList = parsed;
+        } catch (e) {}
+      }
 
-    // APPEND-ONLY: Selalu tambahkan riwayat percobaan baru
-    loginList.push({
-      nama: studentName,
-      waktu: newRecord.waktu,
-      skor: data.nilaiAkhir,
-      jumlahBenar: data.jumlahBenar,
-      jumlahSalah: data.jumlahSalah,
-    });
-    localStorage.setItem('histori_energi', JSON.stringify(loginList));
+      // APPEND-ONLY: Selalu tambahkan riwayat percobaan baru bagi siswa
+      loginList.push({
+        nama: studentName,
+        waktu: newRecord.waktu,
+        skor: data.nilaiAkhir,
+        jumlahBenar: data.jumlahBenar,
+        jumlahSalah: data.jumlahSalah,
+      });
+      localStorage.setItem('histori_energi', JSON.stringify(loginList));
+    }
 
     // Picu event storage agar pembaruan langsung sinkron ke seluruh UI
     window.dispatchEvent(new Event('storage'));

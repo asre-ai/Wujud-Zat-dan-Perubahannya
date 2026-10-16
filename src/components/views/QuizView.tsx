@@ -9,6 +9,8 @@ import {
   saveQuizResult,
   exportStudentCsv,
   exportTeacherCsv,
+  isCurrentUserTeacher,
+  isTeacherName,
 } from '../../utils/quizHistory';
 import confetti from 'canvas-confetti';
 import {
@@ -244,13 +246,22 @@ export const QuizView: React.FC<QuizViewProps> = ({
               </p>
             )}
 
-            {/* Catatan Keamanan Name Lock */}
-            <div className="mt-3.5 p-3 rounded-xl bg-amber-100/70 border border-amber-300 text-amber-950 text-xs font-semibold flex items-start gap-2">
-              <Lock className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-              <p className="leading-snug">
-                <strong>Pengamanan Kuis (Name Lock):</strong> Saat kamu menekan tombol <strong>Mulai Kuis</strong>, kolom nama akan otomatis dikunci dan tombol ganti nama disembunyikan sampai hasil kuis selesai demi keamanan nilai kuis.
-              </p>
-            </div>
+            {/* Indikator Mode Guru atau Catatan Keamanan Name Lock */}
+            {isCurrentUserTeacher() || isTeacherName(studentNameInput) ? (
+              <div className="mt-3.5 p-3 rounded-xl bg-sky-50 border border-sky-300 text-sky-950 text-xs font-semibold flex items-start gap-2">
+                <span className="text-base shrink-0">👨‍🏫</span>
+                <p className="leading-snug">
+                  <strong>Mode Guru (Pengajar):</strong> Anda dapat mencoba kuis secara bebas. Sesuai sistem keamanan, nilai Guru <strong>tidak akan dimasukkan ke Papan Juara / Top Scorers siswa</strong>.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-3.5 p-3 rounded-xl bg-amber-100/70 border border-amber-300 text-amber-950 text-xs font-semibold flex items-start gap-2">
+                <Lock className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                <p className="leading-snug">
+                  <strong>Pengamanan Kuis (Name Lock):</strong> Saat kamu menekan tombol <strong>Mulai Kuis</strong>, kolom nama akan otomatis dikunci dan tombol ganti nama disembunyikan sampai hasil kuis selesai demi keamanan nilai kuis.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Tombol Mulai Kuis */}
@@ -318,17 +329,35 @@ export const QuizView: React.FC<QuizViewProps> = ({
             Hasil Kuis Wujud Zat
           </h2>
 
-          {/* Kartu Identitas Siswa (Name Lock: Terkunci Permanen, Tombol Ganti Nama Dihilangkan) */}
+          {/* Kartu Identitas Siswa / Guru */}
           <div className="mt-4 mb-2 flex items-center justify-center gap-2 w-full max-w-sm">
-            <div className="inline-flex items-center gap-2.5 bg-emerald-50 px-4 py-2.5 rounded-2xl border-2 border-emerald-300 text-slate-800 shadow-2xs">
-              <Lock className="w-4 h-4 text-emerald-600" />
-              <span className="text-xs font-bold text-slate-500">Nama Siswa:</span>
-              <strong className="text-sm font-black text-slate-900 font-heading">{displayName}</strong>
-              <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-200 text-emerald-950 px-2 py-0.5 rounded-full border border-emerald-300">
-                🔒 Terkunci
-              </span>
-            </div>
+            {(quizRecord?.isTeacher || isCurrentUserTeacher() || isTeacherName(displayName)) ? (
+              <div className="inline-flex items-center gap-2 bg-sky-50 px-4 py-2.5 rounded-2xl border-2 border-sky-300 text-slate-800 shadow-2xs">
+                <span className="text-sm">👨‍🏫</span>
+                <span className="text-xs font-bold text-slate-500">Akun:</span>
+                <strong className="text-sm font-black text-sky-900 font-heading">{displayName}</strong>
+                <span className="text-[10px] font-black uppercase tracking-wider bg-sky-200 text-sky-950 px-2 py-0.5 rounded-full border border-sky-300">
+                  Mode Guru
+                </span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2.5 bg-emerald-50 px-4 py-2.5 rounded-2xl border-2 border-emerald-300 text-slate-800 shadow-2xs">
+                <Lock className="w-4 h-4 text-emerald-600" />
+                <span className="text-xs font-bold text-slate-500">Nama Siswa:</span>
+                <strong className="text-sm font-black text-slate-900 font-heading">{displayName}</strong>
+                <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-200 text-emerald-950 px-2 py-0.5 rounded-full border border-emerald-300">
+                  🔒 Terkunci
+                </span>
+              </div>
+            )}
           </div>
+
+          {(quizRecord?.isTeacher || isCurrentUserTeacher() || isTeacherName(displayName)) && (
+            <div className="mt-1 mb-2 px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 text-xs font-semibold flex items-center justify-center gap-2 max-w-md w-full shadow-2xs">
+              <span>🛡️</span>
+              <span><strong>Aman:</strong> Nilai kuis ini tidak dicatat ke Papan Peringkat Juara Siswa.</span>
+            </div>
+          )}
 
           {/* Big Score Display */}
           <div className="my-5 p-6 rounded-[28px] bg-amber-50/70 border-2 border-amber-200/90 w-full max-w-md shadow-xs">
