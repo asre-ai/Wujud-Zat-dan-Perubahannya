@@ -11,7 +11,9 @@ import {
   exportTeacherCsv,
   isCurrentUserTeacher,
   isTeacherName,
+  getWaktuFormatted,
 } from '../../utils/quizHistory';
+import { saveStudentSessionToCloud } from '../../utils/firebaseSync';
 import confetti from 'canvas-confetti';
 import {
   CheckCircle2,
@@ -75,6 +77,11 @@ export const QuizView: React.FC<QuizViewProps> = ({
     setIsAnswered(false);
     setScoreCount(0);
     setIsFinished(false);
+
+    // Sinkronisasi sesi siswa ke Cloud Firestore antar-gadget
+    if (!isCurrentUserTeacher() && !isTeacherName(cleanName)) {
+      saveStudentSessionToCloud(cleanName, getWaktuFormatted(), 0).catch(() => {});
+    }
   };
 
   const handleChooseOption = (key: 'A' | 'B' | 'C' | 'D') => {

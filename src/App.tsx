@@ -15,6 +15,7 @@ import { LabView } from './components/views/LabView';
 import { TransitionsView } from './components/views/TransitionsView';
 import { QuizView } from './components/views/QuizView';
 import { TopScorersModal } from './components/common/TopScorersModal';
+import { startFirebaseRealtimeSync } from './utils/firebaseSync';
 
 const STORAGE_KEY = 'zat_3d_user_progress_v1';
 
@@ -42,6 +43,14 @@ export default function App() {
     }
     return defaultProgress;
   });
+
+  // Realtime Firebase Cloud Firestore Sync for cross-device synchronization
+  useEffect(() => {
+    const cleanup = startFirebaseRealtimeSync();
+    return () => {
+      cleanup();
+    };
+  }, []);
 
   // Global event listener for opening top scorers and navigating from any script/overlay
   useEffect(() => {

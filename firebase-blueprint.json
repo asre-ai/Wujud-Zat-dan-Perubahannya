@@ -1,0 +1,84 @@
+{
+  "entities": {
+    "QuizResult": {
+      "title": "QuizResult",
+      "description": "Hasil kuis siswa yang tersimpan untuk papan juara dan rekap guru antar gadget",
+      "type": "object",
+      "properties": {
+        "nama": {
+          "type": "string",
+          "description": "Nama siswa",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "waktu": {
+          "type": "string",
+          "description": "Waktu pengerjaan kuis",
+          "maxLength": 60
+        },
+        "skor": {
+          "type": "number",
+          "description": "Skor kuis siswa (0-100)"
+        },
+        "jumlahBenar": {
+          "type": "number",
+          "description": "Jumlah jawaban kuis yang benar (0-10)"
+        },
+        "jumlahSalah": {
+          "type": "number",
+          "description": "Jumlah jawaban kuis yang salah (0-10)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp ISO pembuatan data"
+        },
+        "isTeacher": {
+          "type": "boolean",
+          "description": "Penanda jika hasil kuis berasal dari uji coba akun guru"
+        }
+      },
+      "required": ["nama", "waktu", "skor", "jumlahBenar", "jumlahSalah"]
+    },
+    "StudentSession": {
+      "title": "StudentSession",
+      "description": "Riwayat sesi login siswa agar guru dan kelas dapat memantau siswa dari gadget berbeda",
+      "type": "object",
+      "properties": {
+        "nama": {
+          "type": "string",
+          "description": "Nama siswa",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "waktu": {
+          "type": "string",
+          "description": "Waktu siswa login",
+          "maxLength": 60
+        },
+        "skor": {
+          "type": "number",
+          "description": "Skor kuis terkini (default 0 saat login)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp ISO pembuatan data"
+        }
+      },
+      "required": ["nama", "waktu", "skor"]
+    }
+  },
+  "firestore": {
+    "/quiz_results/{resultId}": {
+      "schema": {
+        "$ref": "#/entities/QuizResult"
+      },
+      "description": "Koleksi hasil kuis siswa untuk papan juara dan rekap nilai guru"
+    },
+    "/student_sessions/{sessionId}": {
+      "schema": {
+        "$ref": "#/entities/StudentSession"
+      },
+      "description": "Koleksi sesi login siswa untuk histori kelas real-time"
+    }
+  }
+}

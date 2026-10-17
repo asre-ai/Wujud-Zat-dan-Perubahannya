@@ -16,6 +16,8 @@ export interface QuizHistoryRecord {
 export const QUIZ_STORAGE_KEY = 'riwayatKuisEnergi';
 export const ACTIVE_STUDENT_KEY = 'siswa_aktif_nama';
 
+import { saveQuizResultToCloud } from './firebaseSync';
+
 /**
  * Memeriksa apakah nama atau sesi akun saat ini adalah akun Guru / Pengajar
  */
@@ -187,6 +189,11 @@ export function saveQuizResult(data: {
         jumlahSalah: data.jumlahSalah,
       });
       localStorage.setItem('histori_energi', JSON.stringify(loginList));
+    }
+
+    // 3. Sinkronisasikan secara Real-Time ke Cloud Firestore antar-gadget
+    if (!isTeacher) {
+      saveQuizResultToCloud(newRecord).catch((e) => console.warn('Cloud sync error:', e));
     }
 
     // Picu event storage agar pembaruan langsung sinkron ke seluruh UI

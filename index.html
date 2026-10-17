@@ -699,7 +699,10 @@
         <div id="ui-admin-header">
           <div id="ui-admin-header-title">
             <h2>⚙️ Panel Guru — Riwayat Siswa</h2>
-            <span id="ui-admin-badge">histori_energi</span>
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <span id="ui-admin-badge">histori_energi</span>
+              <span style="background: #ecfdf5; color: #065f46; border: 1.5px solid #a7f3d0; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">☁️ Sinkron Antar-Gadget (Online)</span>
+            </div>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <button id="ui-btn-header-beranda" class="ui-admin-btn-action" type="button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: 2px solid #047857; font-weight: 800; padding: 6px 14px; border-radius: 12px; cursor: pointer;" title="Akses Beranda & Seluruh Fitur Web Seperti Siswa">
@@ -903,6 +906,13 @@
             window.dispatchEvent(new CustomEvent('siswa-login-success', { detail: nama }));
           } catch (e) {}
 
+          // Sinkronisasi Sesi Siswa ke Firebase Cloud Antar-Gadget
+          try {
+            if (typeof window.syncStudentSessionToCloud === 'function') {
+              window.syncStudentSessionToCloud(nama, getWaktuSekarang(), 0);
+            }
+          } catch (e) {}
+
           // Sembunyikan layar login agar anak bisa langsung melihat canvas 3D
           if (loginOverlay) {
             loginOverlay.style.display = 'none';
@@ -1051,6 +1061,15 @@
           if (statAvg) statAvg.textContent = Math.round(totalSkor / list.length).toString();
           if (statLast) statLast.textContent = list[list.length - 1].nama || '-';
         }
+
+        // Ekspos fungsi renderAdminTable dan dengarkan pembaruan real-time dari Firestore
+        window.renderAdminTable = renderAdminTable;
+        window.addEventListener('cloud-sync-update', function () {
+          renderAdminTable();
+        });
+        window.addEventListener('storage', function () {
+          renderAdminTable();
+        });
 
         // 3. Sistem Buka Modal PIN Guru (100% Aksesibel & Teruji di Iframe)
         function bukaModalPin() {

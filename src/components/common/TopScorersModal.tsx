@@ -42,6 +42,18 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       loadData(filterMode);
+
+      const handleSync = () => {
+        loadData(filterMode);
+      };
+
+      window.addEventListener('cloud-sync-update', handleSync);
+      window.addEventListener('storage', handleSync);
+
+      return () => {
+        window.removeEventListener('cloud-sync-update', handleSync);
+        window.removeEventListener('storage', handleSync);
+      };
     }
   }, [isOpen, filterMode]);
 
@@ -136,7 +148,12 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
           </div>
 
           <div className="mt-2 text-xs font-semibold text-amber-950/90 flex flex-wrap items-center justify-between gap-2">
-            <span>Disinkronkan langsung dari data <code className="bg-white/60 px-1 py-0.5 rounded font-mono text-[11px]">histori_energi</code></span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span>Disinkronkan dari <code className="bg-white/60 px-1 py-0.5 rounded font-mono text-[11px]">histori_energi</code></span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-emerald-900 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-300">
+                ☁️ Real-time Cloud
+              </span>
+            </div>
             {totalRecords > 0 && (
               <span className="inline-flex items-center gap-1 bg-amber-950/15 px-2 py-0.5 rounded-full text-[11px] font-bold">
                 <Users className="w-3 h-3" />
