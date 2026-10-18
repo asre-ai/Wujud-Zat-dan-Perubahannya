@@ -1,11 +1,17 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
+
+// Authenticate anonymously so authInfo and Firestore write permissions are guaranteed
+signInAnonymously(auth).catch((err) => {
+  // Silent fallback if anonymous auth isn't enabled or is offline
+  console.log('Firebase auth init notice:', err?.message || err);
+});
 
 export enum OperationType {
   CREATE = 'create',

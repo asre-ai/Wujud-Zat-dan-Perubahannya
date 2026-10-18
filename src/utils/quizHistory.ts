@@ -16,7 +16,7 @@ export interface QuizHistoryRecord {
 export const QUIZ_STORAGE_KEY = 'riwayatKuisEnergi';
 export const ACTIVE_STUDENT_KEY = 'siswa_aktif_nama';
 
-import { saveQuizResultToCloud } from './firebaseSync';
+import { saveQuizResultToCloud, clearAllHistoryCloudAndLocal } from './firebaseSync';
 
 /**
  * Memeriksa apakah nama atau sesi akun saat ini adalah akun Guru / Pengajar
@@ -285,11 +285,17 @@ export function exportTeacherCsv(filterMode: 'all' | 'highest' = 'all'): { succe
 
 /**
  * 3. RESET DATA GURU:
- * Menghapus data riwayatKuisEnergi dari localStorage jika kelas sudah selesai dan berganti ke kelas baru
+ * Menghapus data riwayatKuisEnergi & histori_energi dari localStorage dan Cloud Firestore
+ * jika kelas sudah selesai dan berganti ke kelas baru
  */
 export function resetQuizHistory(): void {
   try {
     localStorage.removeItem(QUIZ_STORAGE_KEY);
+    localStorage.removeItem('histori_energi');
+    localStorage.removeItem('pending_cloud_sessions');
+    localStorage.setItem(QUIZ_STORAGE_KEY, '[]');
+    localStorage.setItem('histori_energi', '[]');
+    clearAllHistoryCloudAndLocal().catch(() => {});
   } catch (err) {
     console.error('Gagal mereset riwayatKuisEnergi:', err);
   }

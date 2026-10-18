@@ -236,6 +236,122 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
       }
 
+      /* --- Scoped CSS: Popup Selamat Datang Kembali Siswa (#ui-welcome-back-modal) --- */
+      #ui-welcome-back-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(12, 74, 110, 0.82);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        padding: 16px;
+        box-sizing: border-box;
+        font-family: 'Fredoka', 'Quicksand', system-ui, -apple-system, sans-serif;
+      }
+
+      #ui-welcome-back-modal * {
+        box-sizing: border-box;
+      }
+
+      #ui-welcome-back-card {
+        background: #ffffff;
+        border: 4px solid #10b981;
+        border-radius: 32px;
+        box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.45), 0 0 0 6px rgba(209, 250, 229, 0.95);
+        width: 100%;
+        max-width: 440px;
+        padding: 32px 28px;
+        text-align: center;
+        animation: ui-pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+      }
+
+      #ui-welcome-back-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #d1fae5;
+        color: #065f46;
+        border: 2px solid #a7f3d0;
+        padding: 5px 14px;
+        border-radius: 9999px;
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 12px;
+      }
+
+      #ui-welcome-back-icon {
+        font-size: 52px;
+        line-height: 1;
+        margin-bottom: 10px;
+        display: inline-block;
+        animation: ui-float-icon 2.5s ease-in-out infinite;
+      }
+
+      #ui-welcome-back-title {
+        color: #0f172a;
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0 0 6px 0;
+        letter-spacing: -0.02em;
+      }
+
+      #ui-welcome-back-name {
+        color: #059669;
+        font-size: 20px;
+        font-weight: 800;
+        margin-bottom: 12px;
+        padding: 6px 16px;
+        background: #ecfdf5;
+        border: 2px solid #a7f3d0;
+        border-radius: 14px;
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      #ui-welcome-back-subtitle {
+        color: #475569;
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0 0 22px 0;
+        line-height: 1.5;
+      }
+
+      #ui-btn-lanjutkan-petualangan {
+        width: 100%;
+        padding: 15px 24px;
+        font-size: 17px;
+        font-weight: 800;
+        font-family: inherit;
+        color: #ffffff;
+        background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+        border: 3px solid #047857;
+        border-radius: 20px;
+        box-shadow: 0 6px 0 #064e3b, 0 12px 20px -4px rgba(16, 185, 129, 0.4);
+        cursor: pointer;
+        transition: transform 0.12s, box-shadow 0.12s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      #ui-btn-lanjutkan-petualangan:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 0 #064e3b, 0 16px 24px -4px rgba(16, 185, 129, 0.5);
+      }
+
+      #ui-btn-lanjutkan-petualangan:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #064e3b, 0 6px 12px -2px rgba(16, 185, 129, 0.4);
+      }
+
       /* --- Scoped CSS: Modal Keamanan PIN Guru (#ui-pin-modal-energi) --- */
       #ui-pin-modal-energi {
         position: fixed;
@@ -702,6 +818,7 @@
     <!-- 1. Overlay Layar Login Anak (Di tengah layar) -->
     <div id="ui-login-energi">
       <div id="ui-login-card">
+        <button id="ui-login-btn-close-x" type="button" style="position: absolute; top: 14px; right: 16px; background: none; border: none; font-size: 22px; color: #94a3b8; cursor: pointer; padding: 4px; line-height: 1; border-radius: 8px;" title="Tutup Layar Login">✕</button>
         <div id="ui-login-badge">⭐ Petualangan Sains SD</div>
         <div id="ui-login-icon">🚀</div>
         <h1 id="ui-login-title">Halo Sahabat Cilik! 👋</h1>
@@ -732,6 +849,24 @@
             <span>Panel Guru</span>
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- 1B. Popup Selamat Datang Kembali (Untuk Siswa yang Pernah Akses) -->
+    <div id="ui-welcome-back-modal">
+      <div id="ui-welcome-back-card">
+        <button id="ui-welcome-back-btn-close-x" type="button" style="position: absolute; top: 14px; right: 16px; background: none; border: none; font-size: 22px; color: #94a3b8; cursor: pointer; padding: 4px; line-height: 1; border-radius: 8px;" title="Tutup">✕</button>
+        <div id="ui-welcome-back-badge">⭐ Teman Belajar Setia</div>
+        <div id="ui-welcome-back-icon">🎉</div>
+        <h2 id="ui-welcome-back-title">Selamat Datang Kembali!</h2>
+        <div id="ui-welcome-back-name">Halo!</div>
+        <p id="ui-welcome-back-subtitle">
+          Senang sekali melihatmu kembali belajar IPA 3D Wujud Zat! Catatan belajarmu tersimpan rapi. Yuk lanjutkan petualangannya! 🚀
+        </p>
+
+        <button id="ui-btn-lanjutkan-petualangan" type="button">
+          <span>🚀 Lanjutkan Petualangan</span>
+        </button>
       </div>
     </div>
 
@@ -883,13 +1018,66 @@
     <script>
       (function () {
         var CACHE_KEY = 'histori_energi';
-        var PIN_GURU = 'guru12345';
+        var PIN_GURU = 'gurumerdeka12345';
 
         // Elemen DOM Login
         var loginOverlay = document.getElementById('ui-login-energi');
         var inputNama = document.getElementById('ui-login-input');
         var btnMulai = document.getElementById('ui-btn-mulai-petualangan');
         var loginError = document.getElementById('ui-login-error');
+        var btnLoginCloseX = document.getElementById('ui-login-btn-close-x');
+
+        // Elemen DOM Popup Selamat Datang Kembali
+        var welcomeBackModal = document.getElementById('ui-welcome-back-modal');
+        var welcomeBackName = document.getElementById('ui-welcome-back-name');
+        var btnLanjutkanPetualangan = document.getElementById('ui-btn-lanjutkan-petualangan');
+        var btnWelcomeBackCloseX = document.getElementById('ui-welcome-back-btn-close-x');
+
+        // TETAP TAMPILKAN FITUR MASUKKAN NAMA UNTUK SISWA walau sudah pernah akses
+        try {
+          var activeNama = localStorage.getItem('siswa_aktif_nama');
+          var userRole = localStorage.getItem('user_role');
+
+          if (userRole === 'guru') {
+            // Sembunyikan layar login siswa jika akun aktif adalah Guru yang masuk via panel guru
+            if (loginOverlay) loginOverlay.style.display = 'none';
+          } else {
+            // Untuk siswa: layar masukkan nama tetap aktif, otomatis isi nama terakhir agar praktis
+            if (loginOverlay) loginOverlay.style.display = 'flex';
+            if (inputNama && activeNama && activeNama.trim() && activeNama !== 'Siswa Cilik') {
+              inputNama.value = activeNama.trim();
+            }
+          }
+        } catch (e) {}
+
+        if (btnLoginCloseX) {
+          btnLoginCloseX.addEventListener('click', function () {
+            if (loginOverlay) loginOverlay.style.display = 'none';
+          });
+        }
+
+        // Handler Penutupan Popup Selamat Datang Kembali
+        function tutupWelcomeBackModal() {
+          if (welcomeBackModal) {
+            welcomeBackModal.style.display = 'none';
+          }
+        }
+
+        if (btnLanjutkanPetualangan) {
+          btnLanjutkanPetualangan.addEventListener('click', tutupWelcomeBackModal);
+        }
+
+        if (btnWelcomeBackCloseX) {
+          btnWelcomeBackCloseX.addEventListener('click', tutupWelcomeBackModal);
+        }
+
+        if (welcomeBackModal) {
+          welcomeBackModal.addEventListener('click', function (e) {
+            if (e.target === welcomeBackModal) {
+              tutupWelcomeBackModal();
+            }
+          });
+        }
 
         // Elemen DOM Tombol Guru
         var btnGuruInLogin = document.getElementById('ui-btn-guru-energi');
@@ -963,6 +1151,45 @@
           return div.innerHTML;
         }
 
+        // Memeriksa apakah siswa sudah pernah mengakses sebelumnya dengan nama yang sama
+        function hasAccessedBefore(nameToCheck) {
+          if (!nameToCheck) return false;
+          var target = nameToCheck.trim().toLowerCase();
+
+          // 1. Cek dari histori_energi
+          var hist = getHistori();
+          for (var i = 0; i < hist.length; i++) {
+            if (hist[i] && hist[i].nama && hist[i].nama.trim().toLowerCase() === target) {
+              return true;
+            }
+          }
+
+          // 2. Cek dari riwayatKuisEnergi
+          try {
+            var rawKuis = localStorage.getItem('riwayatKuisEnergi');
+            if (rawKuis) {
+              var kuisList = JSON.parse(rawKuis);
+              if (Array.isArray(kuisList)) {
+                for (var j = 0; j < kuisList.length; j++) {
+                  if (kuisList[j] && kuisList[j].nama && kuisList[j].nama.trim().toLowerCase() === target) {
+                    return true;
+                  }
+                }
+              }
+            }
+          } catch (e) {}
+
+          // 3. Cek dari nama siswa yang pernah aktif sebelumnya
+          try {
+            var prevActive = localStorage.getItem('siswa_aktif_nama');
+            if (prevActive && prevActive.trim().toLowerCase() === target) {
+              return true;
+            }
+          } catch (e) {}
+
+          return false;
+        }
+
         // 1. Eksekusi Login Anak
         function handleLogin() {
           if (!inputNama) return;
@@ -975,6 +1202,9 @@
           }
 
           if (loginError) loginError.style.display = 'none';
+
+          // Periksa apakah nama ini sudah pernah mengakses sebelumnya
+          var isReturningStudent = hasAccessedBefore(nama);
 
           // Simpan ke localStorage sesuai spesifikasi:
           // array of objects: { nama, waktu, skor: 0 } dengan key 'histori_energi'
@@ -992,16 +1222,42 @@
             window.dispatchEvent(new CustomEvent('siswa-login-success', { detail: nama }));
           } catch (e) {}
 
-          // Sinkronisasi Sesi Siswa ke Firebase Cloud Antar-Gadget
+          // Sinkronisasi Sesi Siswa ke Firebase Cloud Antar-Gadget (Real-Time atau Antrean)
           try {
             if (typeof window.syncStudentSessionToCloud === 'function') {
               window.syncStudentSessionToCloud(nama, getWaktuSekarang(), 0);
+            } else {
+              // Antrean jika modul React Firebase masih proses booting
+              var pending = JSON.parse(localStorage.getItem('pending_cloud_sessions') || '[]');
+              pending.push({ nama: nama, waktu: getWaktuSekarang(), skor: 0 });
+              localStorage.setItem('pending_cloud_sessions', JSON.stringify(pending));
             }
           } catch (e) {}
 
           // Sembunyikan layar login agar anak bisa langsung melihat canvas 3D
           if (loginOverlay) {
             loginOverlay.style.display = 'none';
+          }
+
+          // JIKA SISWA PERNAH AKSES DENGAN NAMA YANG SAMA: Tampilkan popup Selamat Datang Kembali!
+          if (isReturningStudent) {
+            if (welcomeBackModal) {
+              if (welcomeBackName) {
+                welcomeBackName.textContent = '👋 ' + nama;
+              }
+              welcomeBackModal.style.display = 'flex';
+
+              // Rayakan kembalinya siswa dengan semarak confetti gembira
+              try {
+                if (typeof window.confetti === 'function') {
+                  window.confetti({
+                    particleCount: 90,
+                    spread: 75,
+                    origin: { y: 0.6 }
+                  });
+                }
+              } catch (e) {}
+            }
           }
         }
 
@@ -1015,9 +1271,15 @@
               handleLogin();
             }
           });
-          // Auto-fokus input nama setelah render
+          inputNama.addEventListener('input', function () {
+            if (loginError) loginError.style.display = 'none';
+          });
+          // Auto-fokus input nama setelah render jika login overlay terbuka
           setTimeout(function () {
-            inputNama.focus();
+            if (loginOverlay && loginOverlay.style.display !== 'none') {
+              inputNama.focus();
+              inputNama.select();
+            }
           }, 200);
         }
 
@@ -1086,6 +1348,26 @@
           var rawList = getHistori().filter(function (it) {
             return !isTeacherEntry(it);
           });
+
+          // Gabungkan juga data riwayat kuis dari cloud / local agar seluruh gadget sinkron
+          try {
+            var rawKuis = localStorage.getItem('riwayatKuisEnergi');
+            if (rawKuis) {
+              var parsedKuis = JSON.parse(rawKuis);
+              if (Array.isArray(parsedKuis)) {
+                parsedKuis.forEach(function (k) {
+                  if (k && k.nama && !isTeacherEntry(k)) {
+                    rawList.push({
+                      nama: k.nama,
+                      waktu: k.waktu || '-',
+                      skor: k.nilaiAkhir != null ? k.nilaiAkhir : (k.skor ?? 0)
+                    });
+                  }
+                });
+              }
+            }
+          } catch (e) {}
+
           if (!tableBody) return;
 
           tableBody.innerHTML = '';
@@ -1176,9 +1458,10 @@
 
         function submitPin() {
           if (!pinInput) return;
-          var pinVal = pinInput.value.trim();
+          var pinVal = pinInput.value.trim().toLowerCase();
 
-          if (pinVal === PIN_GURU) {
+          // Validasi PIN Guru resmi: gurumerdeka12345
+          if (pinVal === PIN_GURU || pinVal === 'gurumerdeka12345') {
             tutupModalPin();
             renderAdminTable();
             if (adminModal) adminModal.style.display = 'flex';
@@ -1233,10 +1516,12 @@
           });
         }
 
-        // Keyboard Shortcut: Escape menutup modal PIN atau Admin
+        // Keyboard Shortcut: Escape menutup modal PIN, Admin, atau Selamat Datang
         window.addEventListener('keydown', function (e) {
           if (e.key === 'Escape') {
-            if (pinModal && pinModal.style.display === 'flex') {
+            if (welcomeBackModal && welcomeBackModal.style.display === 'flex') {
+              tutupWelcomeBackModal();
+            } else if (pinModal && pinModal.style.display === 'flex') {
               tutupModalPin();
             } else if (adminModal && adminModal.style.display === 'flex') {
               tutupModalAdmin();
@@ -1366,19 +1651,49 @@
           });
         }
 
-        // Hapus Riwayat Belajar Siswa (dengan konfirmasi in-button yang aman di iframe)
+        // Hapus Riwayat Belajar Siswa Bersih Total (Lokal + Cloud Firestore Realtime)
         var confirmClearTimeout = null;
         if (btnClearHistory) {
           btnClearHistory.addEventListener('click', function () {
             if (btnClearHistory.getAttribute('data-confirming') === 'true') {
+              if (confirmClearTimeout) clearTimeout(confirmClearTimeout);
+              btnClearHistory.removeAttribute('data-confirming');
+              btnClearHistory.innerHTML = '<span>⏳ Membersihkan Total (Cloud & Lokal)...</span>';
+              btnClearHistory.style.opacity = '0.7';
+              btnClearHistory.style.pointerEvents = 'none';
+
+              // 1. Bersihkan localStorage segera
               saveHistori([]);
               try {
                 localStorage.removeItem('riwayatKuisEnergi');
+                localStorage.removeItem('pending_cloud_sessions');
+                localStorage.removeItem('siswa_aktif_nama');
+                localStorage.setItem('riwayatKuisEnergi', '[]');
               } catch (e) {}
-              renderAdminTable();
-              btnClearHistory.removeAttribute('data-confirming');
-              btnClearHistory.innerHTML = '<span>🗑️ Hapus Riwayat</span>';
-              if (confirmClearTimeout) clearTimeout(confirmClearTimeout);
+
+              // 2. Bersihkan Cloud Firestore jika modul sudah aktif
+              var p = null;
+              if (typeof window.clearAllHistoryCloudAndLocal === 'function') {
+                p = window.clearAllHistoryCloudAndLocal();
+              } else {
+                p = Promise.resolve(true);
+              }
+
+              Promise.resolve(p).then(function () {
+                renderAdminTable();
+                btnClearHistory.innerHTML = '<span>✅ Riwayat Bersih Total!</span>';
+                setTimeout(function () {
+                  btnClearHistory.innerHTML = '<span>🗑️ Hapus Riwayat</span>';
+                  btnClearHistory.style.opacity = '1';
+                  btnClearHistory.style.pointerEvents = 'auto';
+                }, 2000);
+              }).catch(function (err) {
+                console.error('Gagal hapus cloud:', err);
+                renderAdminTable();
+                btnClearHistory.innerHTML = '<span>🗑️ Hapus Riwayat</span>';
+                btnClearHistory.style.opacity = '1';
+                btnClearHistory.style.pointerEvents = 'auto';
+              });
             } else {
               btnClearHistory.setAttribute('data-confirming', 'true');
               btnClearHistory.innerHTML = '<span>⚠️ Yakin Hapus Semua? Klik Lagi</span>';

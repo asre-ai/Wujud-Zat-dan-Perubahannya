@@ -16,6 +16,11 @@ import { TransitionsView } from './components/views/TransitionsView';
 import { QuizView } from './components/views/QuizView';
 import { TopScorersModal } from './components/common/TopScorersModal';
 import { startFirebaseRealtimeSync } from './utils/firebaseSync';
+import confetti from 'canvas-confetti';
+
+if (typeof window !== 'undefined') {
+  (window as any).confetti = confetti;
+}
 
 const STORAGE_KEY = 'zat_3d_user_progress_v1';
 

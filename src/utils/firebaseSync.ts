@@ -4,6 +4,7 @@ import {
   setDoc,
   getDocs,
   onSnapshot,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { QuizHistoryRecord, QUIZ_STORAGE_KEY, isTeacherName } from './quizHistory';
@@ -21,8 +22,9 @@ export async function saveStudentSessionToCloud(nama: string, waktu: string, sko
     return;
   }
 
-  // ID dokumen yang aman dan terurut waktu
-  const docId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+  // ID dokumen yang aman dan terurut waktu (hanya huruf, angka, underscore, hyphen)
+  const randomPart = Math.random().toString(36).substring(2, 10).replace(/[^a-zA-Z0-9]/g, 'x');
+  const docId = `session_${Date.now()}_${randomPart}`;
   const payload = {
     nama: cleanName.substring(0, 60),
     waktu: (waktu || '-').substring(0, 60),
@@ -42,6 +44,82 @@ export async function saveStudentSessionToCloud(nama: string, waktu: string, sko
   }
 }
 
+// Daftarkan fungsi global seawal mungkin agar index.html (Vanilla JS) dapat memanggil sinkronisasi langsung
+if (typeof window !== 'undefined') {
+  (window as any).syncStudentSessionToCloud = saveStudentSessionToCloud;
+  (window as any).syncQuizResultToCloud = saveQuizResultToCloud;
+  (window as any).clearAllHistoryCloudAndLocal = clearAllHistoryCloudAndLocal;
+}
+
+/**
+ * RESTART & PEMBERSIHAN TOTAL RIWAYAT (Lokal + Cloud Firestore):
+ * Menghapus semua dokumen dari koleksi quiz_results dan student_sessions di Cloud Firestore
+ * serta mengosongkan seluruh localStorage agar nama-nama tidak lengket saat web dimuat ulang.
+ */
+export async function clearAllHistoryCloudAndLocal(): Promise<boolean> {
+  console.log('🧹 Memulai Pembersihan Total Riwayat Kuis & Sesi Siswa (Cloud + Local)...');
+  try {
+    // 1. Bersihkan koleksi quiz_results di Firestore
+    try {
+      const quizDocs = await getDocs(collection(db, QUIZ_RESULTS_PATH));
+      const deleteQuizPromises = quizDocs.docs.map((d) => deleteDoc(d.ref));
+      await Promise.all(deleteQuizPromises);
+      console.log(`✅ Berhasil menghapus ${quizDocs.size} dokumen quiz_results di cloud.`);
+    } catch (e) {
+      console.warn('Kendala menghapus dokumen quiz_results di cloud:', e);
+    }
+
+    // 2. Bersihkan koleksi student_sessions di Firestore
+    try {
+      const sessionDocs = await getDocs(collection(db, STUDENT_SESSIONS_PATH));
+      const deleteSessionPromises = sessionDocs.docs.map((d) => deleteDoc(d.ref));
+      await Promise.all(deleteSessionPromises);
+      console.log(`✅ Berhasil menghapus ${sessionDocs.size} dokumen student_sessions di cloud.`);
+    } catch (e) {
+      console.warn('Kendala menghapus dokumen student_sessions di cloud:', e);
+    }
+
+    // 3. Bersihkan memori localStorage
+    try {
+      localStorage.removeItem(QUIZ_STORAGE_KEY);
+      localStorage.removeItem('histori_energi');
+      localStorage.removeItem('pending_cloud_sessions');
+      localStorage.removeItem('siswa_aktif_nama');
+      localStorage.setItem(QUIZ_STORAGE_KEY, '[]');
+      localStorage.setItem('histori_energi', '[]');
+    } catch (e) {}
+
+    // 4. Picu pembaruan ke seluruh UI aplikasi web
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cloud-sync-update'));
+      window.dispatchEvent(new Event('storage'));
+      if (typeof (window as any).renderAdminTable === 'function') {
+        (window as any).renderAdminTable();
+      }
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Gagal membersihkan total riwayat:', err);
+    return false;
+  }
+}
+
+/**
+ * Migrasi pembersihan satu kali otomatis sesuai instruksi user:
+ * "restart saja riwayatnya karena ada nama nama yang lengket saat dibersihkan dan webnya dimuat ulang"
+ */
+export function checkAndTriggerOneTimeRestart(): void {
+  try {
+    const RESTART_KEY = 'riwayat_bersih_total_v1';
+    if (localStorage.getItem(RESTART_KEY) !== 'true') {
+      console.log('🔄 Menjalankan one-time restart riwayat untuk membersihkan nama-nama yang tersangkut...');
+      localStorage.setItem(RESTART_KEY, 'true');
+      clearAllHistoryCloudAndLocal().catch(() => {});
+    }
+  } catch (e) {}
+}
+
 /**
  * Menyimpan hasil kuis siswa ke Firestore agar langsung muncul di Papan Juara (Top Scorers)
  * dan Panel Guru di gadget lain.
@@ -55,7 +133,8 @@ export async function saveQuizResultToCloud(record: QuizHistoryRecord): Promise<
   const isTeacher = record.isTeacher === true || isTeacherName(cleanName);
   if (isTeacher) return;
 
-  const docId = `quiz_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+  const randomPart = Math.random().toString(36).substring(2, 10).replace(/[^a-zA-Z0-9]/g, 'x');
+  const docId = `quiz_${Date.now()}_${randomPart}`;
   const payload = {
     nama: cleanName.substring(0, 60),
     waktu: (record.waktu || '-').substring(0, 60),
@@ -223,6 +302,9 @@ export function startFirebaseRealtimeSync(): () => void {
 
   console.log('☁️ Memulai Sinkronisasi Real-Time Cloud Firestore untuk Hasil Belajar Siswa...');
 
+  // Jalankan pembersihan awal jika ada sisa data lama yang tersangkut (one-time restart)
+  checkAndTriggerOneTimeRestart();
+
   // 1. Dengarkan pembaruan real-time hasil kuis
   const unsubQuiz = onSnapshot(
     collection(db, QUIZ_RESULTS_PATH),
@@ -261,6 +343,22 @@ export function startFirebaseRealtimeSync(): () => void {
     (window as any).syncQuizResultToCloud = saveQuizResultToCloud;
   }
 
+  // Kirimkan data sesi antrean dari sebelum React selesai dimuat
+  try {
+    const pendingRaw = localStorage.getItem('pending_cloud_sessions');
+    if (pendingRaw) {
+      const pending = JSON.parse(pendingRaw);
+      if (Array.isArray(pending) && pending.length > 0) {
+        localStorage.removeItem('pending_cloud_sessions');
+        for (const item of pending) {
+          if (item && item.nama && !isTeacherName(item.nama)) {
+            saveStudentSessionToCloud(item.nama, item.waktu || '', item.skor || 0).catch(() => {});
+          }
+        }
+      }
+    }
+  } catch (e) {}
+
   // Kirimkan data lokal yang sudah ada sebelumnya ke cloud jika belum ada di cloud
   syncLocalToCloudOnce();
 
@@ -276,15 +374,27 @@ export function startFirebaseRealtimeSync(): () => void {
  */
 async function syncLocalToCloudOnce() {
   try {
-    // Unggah histori kuis lokal yang ada ke cloud jika belum tersimpan
+    // 1. Unggah histori kuis lokal yang ada ke cloud jika belum tersimpan
     const rawLocalQuiz = localStorage.getItem(QUIZ_STORAGE_KEY);
     if (rawLocalQuiz) {
       const list: QuizHistoryRecord[] = JSON.parse(rawLocalQuiz);
       if (Array.isArray(list)) {
         for (const item of list) {
           if (!item.isTeacher && !isTeacherName(item.nama)) {
-            // Coba unggah ke cloud
-            saveQuizResultToCloud(item);
+            saveQuizResultToCloud(item).catch(() => {});
+          }
+        }
+      }
+    }
+
+    // 2. Unggah sesi siswa lokal (histori_energi) ke cloud agar laptop/HP lain langsung melihat nama siswa
+    const rawLocalHistori = localStorage.getItem('histori_energi');
+    if (rawLocalHistori) {
+      const hList = JSON.parse(rawLocalHistori);
+      if (Array.isArray(hList)) {
+        for (const h of hList) {
+          if (h && h.nama && !isTeacherName(h.nama)) {
+            saveStudentSessionToCloud(h.nama, h.waktu || '', h.skor || 0).catch(() => {});
           }
         }
       }

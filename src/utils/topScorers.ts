@@ -63,34 +63,37 @@ export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highes
       }
     }
 
-    // Jika histori_energi belum ada data nilai (atau hanya 0 dari login baru),
-    // kita juga periksa riwayatKuisEnergi sebagai cadangan pintar
-    if (list.length === 0 || list.every((item) => !item.skor || item.skor === 0)) {
-      const rawKuis = localStorage.getItem('riwayatKuisEnergi');
-      if (rawKuis) {
-        try {
-          const parsedKuis = JSON.parse(rawKuis);
-          if (Array.isArray(parsedKuis) && parsedKuis.length > 0) {
-            parsedKuis.forEach((k: any) => {
-              if (k && k.nama) {
-                list.push({
-                  nama: k.nama,
-                  waktu: k.waktu || '-',
-                  skor: k.nilaiAkhir ?? 0,
-                  isTeacher: k.isTeacher,
-                  role: k.role,
-                });
-              }
-            });
-          }
-        } catch (e) {
-          // ignore
+    // Selalu sertakan semua hasil kuis dari riwayatKuisEnergi agar seluruh skor siswa antar-gadget sinkron
+    const rawKuis = localStorage.getItem('riwayatKuisEnergi');
+    if (rawKuis) {
+      try {
+        const parsedKuis = JSON.parse(rawKuis);
+        if (Array.isArray(parsedKuis) && parsedKuis.length > 0) {
+          parsedKuis.forEach((k: any) => {
+            if (k && k.nama) {
+              list.push({
+                nama: k.nama,
+                waktu: k.waktu || '-',
+                skor: k.nilaiAkhir != null ? k.nilaiAkhir : (k.skor ?? 0),
+                isTeacher: k.isTeacher,
+                role: k.role,
+              });
+            }
+          });
         }
+      } catch (e) {
+        // ignore
       }
     }
 
-    // FILTER MUTLAK: Buang semua entri guru / pengajar agar tidak pernah masuk papan peringkat siswa
-    list = list.filter((item) => !isTeacherRecord(item.nama, item));
+    // FILTER MUTLAK:
+    // 1. Buang semua entri guru / pengajar agar tidak pernah masuk papan peringkat siswa
+    // 2. Hanya masukkan siswa yang benar-benar telah mengerjakan kuis (ada di riwayat kuis, atau skor > 0)
+    list = list.filter((item: any) => {
+      if (isTeacherRecord(item.nama, item)) return false;
+      const hasTakenQuiz = item.jumlahBenar != null || item.jumlahSalah != null || (typeof item.skor === 'number' && item.skor > 0);
+      return hasTakenQuiz;
+    });
 
     if (list.length === 0) {
       return {

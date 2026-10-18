@@ -28,6 +28,9 @@ import {
   User,
   Check,
   Trophy,
+  ChevronDown,
+  ChevronUp,
+  FileText,
 } from 'lucide-react';
 
 interface QuizViewProps {
@@ -42,9 +45,34 @@ export const QuizView: React.FC<QuizViewProps> = ({
   onOpenTopScorers,
 }) => {
   const [isStarted, setIsStarted] = useState<boolean>(false);
-  const [isNameLocked, setIsNameLocked] = useState<boolean>(false);
-  const [studentNameInput, setStudentNameInput] = useState<string>(() => getActiveStudentName());
+  const [isNameLocked, setIsNameLocked] = useState<boolean>(() => {
+    const active = getActiveStudentName();
+    return active !== '' && active !== 'Siswa Cilik';
+  });
+  const [studentNameInput, setStudentNameInput] = useState<string>(() => {
+    const active = getActiveStudentName();
+    return active !== 'Siswa Cilik' ? active : '';
+  });
   const [nameError, setNameError] = useState<string | null>(null);
+
+  // Sinkronisasi otomatis dengan sesi siswa dari Login Overlay
+  React.useEffect(() => {
+    const syncActiveStudent = () => {
+      const active = getActiveStudentName();
+      if (active && active !== 'Siswa Cilik') {
+        setStudentNameInput(active);
+        setIsNameLocked(true);
+        setNameError(null);
+      }
+    };
+    syncActiveStudent();
+    window.addEventListener('siswa-login-success', syncActiveStudent);
+    window.addEventListener('storage', syncActiveStudent);
+    return () => {
+      window.removeEventListener('siswa-login-success', syncActiveStudent);
+      window.removeEventListener('storage', syncActiveStudent);
+    };
+  }, []);
 
   const [currentIdx, setCurrentIdx] = useState<number>(0);
   const [selectedAnswer, setSelectedAnswer] = useState<'A' | 'B' | 'C' | 'D' | null>(null);
@@ -56,20 +84,37 @@ export const QuizView: React.FC<QuizViewProps> = ({
   const [quizRecord, setQuizRecord] = useState<QuizHistoryRecord | null>(null);
   const [downloadNotice, setDownloadNotice] = useState<string | null>(null);
 
+  // Riwayat jawaban lengkap siswa per butir soal untuk tinjauan hasil
+  interface StudentAnswerItem {
+    questionNumber: number;
+    questionText: string;
+    selectedKey: 'A' | 'B' | 'C' | 'D';
+    selectedText: string;
+    correctKey: 'A' | 'B' | 'C' | 'D';
+    correctText: string;
+    isCorrect: boolean;
+    explanation: string;
+  }
+  const [answersHistory, setAnswersHistory] = useState<StudentAnswerItem[]>([]);
+  const [showAnswerDetails, setShowAnswerDetails] = useState<boolean>(true);
+
   const currentQ = QUIZ_QUESTIONS[currentIdx];
 
   // Handler Mulai Kuis & KUNCI NAMA (Name Lock)
   const handleStartQuiz = () => {
     sound.playPop();
     const cleanName = studentNameInput.trim();
-    if (!cleanName || cleanName === 'Siswa Cilik') {
+    const isTeacher = isCurrentUserTeacher() || isTeacherName(cleanName);
+
+    if (!isTeacher && (!cleanName || cleanName === 'Siswa Cilik')) {
       setNameError('Tuliskan namamu terlebih dahulu sebelum menekan tombol Mulai Kuis! 😊');
       return;
     }
 
     setNameError(null);
+    const effectiveName = isTeacher ? (cleanName || 'Bapak/Ibu Guru') : cleanName;
     // Kunci Nama: Simpan ke localStorage dan jadikan input tidak bisa diedit
-    setActiveStudentName(cleanName);
+    setActiveStudentName(effectiveName);
     setIsNameLocked(true);
     setIsStarted(true);
     setCurrentIdx(0);
@@ -77,10 +122,11 @@ export const QuizView: React.FC<QuizViewProps> = ({
     setIsAnswered(false);
     setScoreCount(0);
     setIsFinished(false);
+    setAnswersHistory([]);
 
     // Sinkronisasi sesi siswa ke Cloud Firestore antar-gadget
-    if (!isCurrentUserTeacher() && !isTeacherName(cleanName)) {
-      saveStudentSessionToCloud(cleanName, getWaktuFormatted(), 0).catch(() => {});
+    if (!isTeacher) {
+      saveStudentSessionToCloud(effectiveName, getWaktuFormatted(), 0).catch(() => {});
     }
   };
 
@@ -97,6 +143,24 @@ export const QuizView: React.FC<QuizViewProps> = ({
     } else {
       sound.playWrong();
     }
+
+    // Catat ke riwayat jawaban siswa
+    const selectedOpt = currentQ.options.find((o) => o.key === key);
+    const correctOpt = currentQ.options.find((o) => o.key === currentQ.correctAnswer);
+
+    setAnswersHistory((prev) => [
+      ...prev,
+      {
+        questionNumber: currentIdx + 1,
+        questionText: currentQ.question,
+        selectedKey: key,
+        selectedText: selectedOpt ? selectedOpt.text : key,
+        correctKey: currentQ.correctAnswer,
+        correctText: correctOpt ? correctOpt.text : currentQ.correctAnswer,
+        isCorrect,
+        explanation: currentQ.explanation,
+      },
+    ]);
   };
 
   const handleNextQuestion = () => {
@@ -162,6 +226,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
     setIsFinished(false);
     setQuizRecord(null);
     setDownloadNotice(null);
+    setAnswersHistory([]);
     // Nama tetap terkunci untuk siswa yang sedang mengerjakan
   };
 
@@ -405,6 +470,86 @@ export const QuizView: React.FC<QuizViewProps> = ({
                   {finalScore >= 90 ? '🏆 Ahli Wujud Zat' : '🏅 Penjelajah Wujud Zat'}
                 </span>
               </div>
+            </div>
+          )}
+
+          {/* Riwayat Jawaban Lengkap Siswa & Pembahasan Soal */}
+          {answersHistory.length > 0 && (
+            <div className="w-full max-w-md my-4 text-left">
+              <button
+                onClick={() => {
+                  sound.playPop();
+                  setShowAnswerDetails((prev) => !prev);
+                }}
+                className="w-full p-3.5 rounded-2xl bg-amber-100/90 hover:bg-amber-200/80 border-2 border-amber-300 flex items-center justify-between text-amber-950 font-black text-xs sm:text-sm shadow-xs transition-all cursor-pointer font-heading"
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-amber-800" />
+                  <span>Riwayat Jawaban & Pembahasan ({answersHistory.length} Soal)</span>
+                </div>
+                {showAnswerDetails ? (
+                  <ChevronUp className="w-5 h-5 text-amber-900" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-amber-900" />
+                )}
+              </button>
+
+              {showAnswerDetails && (
+                <div className="mt-3 space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                  {answersHistory.map((ans, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-3.5 rounded-2xl border-2 transition-all text-xs font-semibold ${
+                        ans.isCorrect
+                          ? 'bg-emerald-50/90 border-emerald-300 text-slate-800'
+                          : 'bg-rose-50/90 border-rose-300 text-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <span className="font-black text-xs font-heading text-slate-900">
+                          Soal #{ans.questionNumber}
+                        </span>
+                        {ans.isCorrect ? (
+                          <span className="inline-flex items-center gap-1 bg-emerald-200 text-emerald-950 px-2.5 py-0.5 rounded-full font-black text-[11px]">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 stroke-[3]" />
+                            <span>Benar (+10)</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 bg-rose-200 text-rose-950 px-2.5 py-0.5 rounded-full font-black text-[11px]">
+                            <XCircle className="w-3.5 h-3.5 text-rose-700 stroke-[3]" />
+                            <span>Salah (0)</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-slate-800 font-bold mb-2">
+                        {ans.questionText}
+                      </p>
+
+                      <div className="p-2.5 rounded-xl bg-white/90 border border-slate-200 space-y-1 mb-2">
+                        <div className="flex items-start gap-1">
+                          <span className="text-slate-500 font-bold">Jawabanmu:</span>
+                          <span className={ans.isCorrect ? 'text-emerald-700 font-black' : 'text-rose-700 font-black'}>
+                            {ans.selectedKey}. {ans.selectedText}
+                          </span>
+                        </div>
+                        {!ans.isCorrect && (
+                          <div className="flex items-start gap-1">
+                            <span className="text-slate-500 font-bold">Kunci Benar:</span>
+                            <span className="text-emerald-700 font-black">
+                              {ans.correctKey}. {ans.correctText}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-amber-100/80 border border-amber-300 text-amber-950 text-[11px] font-semibold leading-relaxed">
+                        💡 <strong>Pembahasan:</strong> {ans.explanation}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
