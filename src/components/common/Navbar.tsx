@@ -94,6 +94,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       active: 'bg-amber-500 text-white shadow-md shadow-amber-500/30 ring-2 ring-amber-300 scale-[1.02] border-b-2 border-amber-700 font-black',
       inactive: 'bg-white/95 hover:bg-amber-50 text-amber-950 border-2 border-amber-400 border-b-4 border-b-amber-500 active:border-b-2 shadow-2xs font-extrabold',
     },
+    glossary: {
+      active: 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 ring-2 ring-emerald-300 scale-[1.02] border-b-2 border-emerald-800 font-black',
+      inactive: 'bg-white/95 hover:bg-emerald-50 text-emerald-950 border-2 border-emerald-300 border-b-4 border-b-emerald-500 active:border-b-2 shadow-2xs font-extrabold',
+    },
   };
 
   const navScrollRef = React.useRef<HTMLDivElement>(null);

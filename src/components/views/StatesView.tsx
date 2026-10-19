@@ -153,6 +153,7 @@ export const StatesView: React.FC = () => {
           <div className="h-[360px] sm:h-[480px] w-full">
             <Matter3DViewer
               stateType={selectedState}
+              onSelectState={handleSelectState}
               isParticleMode={isParticleMode}
               onToggleParticleMode={handleToggleParticle}
               containerShape={liquidContainer}

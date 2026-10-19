@@ -14,6 +14,7 @@ import { StatesView } from './components/views/StatesView';
 import { LabView } from './components/views/LabView';
 import { TransitionsView } from './components/views/TransitionsView';
 import { QuizView } from './components/views/QuizView';
+import { GlossaryView } from './components/views/GlossaryView';
 import { TopScorersModal } from './components/common/TopScorersModal';
 import { startFirebaseRealtimeSync } from './utils/firebaseSync';
 import confetti from 'canvas-confetti';
@@ -140,6 +141,9 @@ export default function App() {
               onOpenTopScorers={() => setIsTopScorersOpen(true)}
             />
           )}
+          {currentPage === 'glossary' && (
+            <GlossaryView onNavigate={handleNavigate} />
+          )}
         </div>
       </main>
 
@@ -185,6 +189,14 @@ export default function App() {
               className="hover:text-sky-600 transition-colors cursor-pointer"
             >
               Kuis 10 Soal
+            </button>
+            <span className="text-slate-300 hidden sm:inline">|</span>
+            <button
+              onClick={() => handleNavigate('glossary')}
+              className="text-emerald-700 hover:text-emerald-900 font-black transition-all cursor-pointer inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-3 py-1 rounded-xl shadow-2xs hover:scale-105 active:scale-95"
+              title="Kamus Glosarium Istilah Sains 3D"
+            >
+              <span>📖 Glosarium IPA</span>
             </button>
             <span className="text-slate-300 hidden sm:inline">|</span>
             <button
