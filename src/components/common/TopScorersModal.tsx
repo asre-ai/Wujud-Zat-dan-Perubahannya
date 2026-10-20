@@ -10,6 +10,7 @@ import {
   Users,
   Award,
   Calendar,
+  Timer,
 } from 'lucide-react';
 import { sound } from '../../utils/audio';
 import {
@@ -203,13 +204,11 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-5">
-          {filterMode === 'highest' && (
-            <div className="p-2.5 rounded-xl bg-emerald-50/90 border border-emerald-300 text-emerald-950 text-xs font-semibold flex items-center gap-2">
-              <span className="text-sm">✅</span>
-              <span><strong>Mode Aman Aktif:</strong> Jika ada nama yang sama, sistem otomatis memilih nilai tertinggi yang sah.</span>
-            </div>
-          )}
+        <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
+          <div className="p-2.5 rounded-xl bg-amber-50/90 border border-amber-300 text-amber-950 text-xs font-semibold flex items-center gap-2">
+            <span className="text-sm">⏱️</span>
+            <span><strong>Aturan Tie-Breaker:</strong> Prioritas utama adalah Skor Tertinggi. Jika ada nilai sama, peringkat ditentukan oleh <strong>durasi waktu pengerjaan tercepat</strong>!</span>
+          </div>
           {top5.length === 0 ? (
             /* Empty State */
             <div className="text-center py-8 px-4 rounded-2xl bg-amber-50/60 border-2 border-dashed border-amber-300">
@@ -237,8 +236,8 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
           ) : (
             <>
               {/* PODIUM VISUAL for TOP 3 (Gold, Silver, Bronze) */}
-              <div className="pt-2 pb-1">
-                <div className="text-center mb-3">
+              <div className="pt-1 pb-1">
+                <div className="text-center mb-2.5">
                   <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
                     Podium Kehormatan 3 Besar
                   </span>
@@ -263,6 +262,11 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
                         <span className="text-[11px] font-extrabold text-slate-700 bg-slate-200/80 px-2 py-0.5 rounded-md mt-0.5">
                           {rank2.skor} Poin
                         </span>
+                        {rank2.formattedDuration && (
+                          <span className="text-[9px] font-bold text-slate-600 bg-white/90 border border-slate-200 px-1.5 py-0.2 rounded mt-0.5 shadow-2xs">
+                            ⏱️ {rank2.formattedDuration}
+                          </span>
+                        )}
                       </>
                     ) : (
                       <div className="text-xs text-slate-400 pb-2">-</div>
@@ -294,6 +298,11 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
                         <span className="text-[11px] font-black text-amber-900 bg-amber-200 px-2 py-0.5 rounded-md mt-0.5 shadow-xs">
                           {rank1.skor} Poin
                         </span>
+                        {rank1.formattedDuration && (
+                          <span className="text-[9px] font-black text-amber-950 bg-amber-100 border border-amber-300 px-1.5 py-0.2 rounded mt-0.5 shadow-2xs">
+                            ⏱️ {rank1.formattedDuration}
+                          </span>
+                        )}
                       </>
                     ) : (
                       <div className="text-xs text-slate-400 pb-2">-</div>
@@ -324,6 +333,11 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
                         <span className="text-[11px] font-extrabold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md mt-0.5">
                           {rank3.skor} Poin
                         </span>
+                        {rank3.formattedDuration && (
+                          <span className="text-[9px] font-bold text-amber-900 bg-white/90 border border-orange-200 px-1.5 py-0.2 rounded mt-0.5 shadow-2xs">
+                            ⏱️ {rank3.formattedDuration}
+                          </span>
+                        )}
                       </>
                     ) : (
                       <div className="text-xs text-slate-400 pb-2">-</div>
@@ -392,9 +406,16 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
                             <div className="inline-block px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-amber-950 font-black text-base sm:text-lg shadow-sm border border-amber-300">
                               {student.skor} <span className="text-xs font-bold">Poin</span>
                             </div>
-                            <div className="text-[10px] font-extrabold text-amber-800 text-right mt-1">
-                              ⭐⭐⭐ Sempurna
-                            </div>
+                            {student.formattedDuration ? (
+                              <div className="text-[11px] font-black text-amber-900 text-right mt-1 flex items-center justify-end gap-1">
+                                <Timer className="w-3 h-3 text-amber-800" />
+                                <span>⏱️ {student.formattedDuration}</span>
+                              </div>
+                            ) : (
+                              <div className="text-[10px] font-extrabold text-amber-800 text-right mt-1">
+                                ⭐⭐⭐ Sempurna
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -441,9 +462,16 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
                             <div className="inline-block px-3 py-1.5 rounded-xl bg-gradient-to-r from-slate-600 to-slate-700 text-white font-black text-base sm:text-lg shadow-sm border border-slate-400">
                               {student.skor} <span className="text-xs font-bold">Poin</span>
                             </div>
-                            <div className="text-[10px] font-bold text-slate-500 text-right mt-1">
-                              Hebat!
-                            </div>
+                            {student.formattedDuration ? (
+                              <div className="text-[11px] font-bold text-slate-600 text-right mt-1 flex items-center justify-end gap-1">
+                                <Timer className="w-3 h-3 text-slate-500" />
+                                <span>⏱️ {student.formattedDuration}</span>
+                              </div>
+                            ) : (
+                              <div className="text-[10px] font-bold text-slate-500 text-right mt-1">
+                                Hebat!
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -490,9 +518,16 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
                             <div className="inline-block px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-700 to-orange-600 text-white font-black text-base sm:text-lg shadow-sm border border-orange-400">
                               {student.skor} <span className="text-xs font-bold">Poin</span>
                             </div>
-                            <div className="text-[10px] font-bold text-orange-800 text-right mt-1">
-                              Luar Biasa!
-                            </div>
+                            {student.formattedDuration ? (
+                              <div className="text-[11px] font-bold text-orange-900 text-right mt-1 flex items-center justify-end gap-1">
+                                <Timer className="w-3 h-3 text-orange-800" />
+                                <span>⏱️ {student.formattedDuration}</span>
+                              </div>
+                            ) : (
+                              <div className="text-[10px] font-bold text-orange-800 text-right mt-1">
+                                Luar Biasa!
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -531,6 +566,12 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
                         <span className="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-800 font-extrabold text-xs sm:text-sm">
                           {student.skor} Poin
                         </span>
+                        {student.formattedDuration && (
+                          <div className="text-[10px] font-bold text-slate-500 text-right mt-1 flex items-center justify-end gap-1">
+                            <Timer className="w-2.5 h-2.5 text-slate-400" />
+                            <span>⏱️ {student.formattedDuration}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

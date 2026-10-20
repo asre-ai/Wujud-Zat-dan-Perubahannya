@@ -1,6 +1,4 @@
-/**
- * Utilitas Pengambilan dan Pemeringkatan Top Scorers dari 'histori_energi'
- */
+import { formatTimerMinutesSeconds } from './quizHistory';
 
 export interface TopScorerStudent {
   rank: number;
@@ -9,16 +7,18 @@ export interface TopScorerStudent {
   skor: number;
   medal: 'gold' | 'silver' | 'bronze' | 'none';
   avatarEmoji: string;
+  duration?: number; // Durasi aktif pengerjaan (detik)
+  formattedDuration?: string; // Format durasi misal "01:05"
 }
 
 const AVATAR_EMOJIS = ['🌟', '🚀', '🔬', '⚡', '🧪', '🎈', '🏆', '🎯', '🎨', '💡'];
 
 export const SEED_DEMO_SCORERS = [
-  { nama: 'Aisyah Putri', waktu: '15 Okt 2026, 08:30', skor: 100 },
-  { nama: 'Budi Santoso', waktu: '15 Okt 2026, 09:15', skor: 90 },
-  { nama: 'Citra Kirana', waktu: '15 Okt 2026, 10:00', skor: 90 },
-  { nama: 'Doni Pratama', waktu: '15 Okt 2026, 10:45', skor: 80 },
-  { nama: 'Eka Lestari', waktu: '15 Okt 2026, 11:20', skor: 70 },
+  { nama: 'Aisyah Putri', waktu: '15 Okt 2026, 08:30', skor: 100, duration: 65, formattedDuration: '01:05' },
+  { nama: 'Budi Santoso', waktu: '15 Okt 2026, 09:15', skor: 90, duration: 75, formattedDuration: '01:15' },
+  { nama: 'Citra Kirana', waktu: '15 Okt 2026, 10:00', skor: 90, duration: 88, formattedDuration: '01:28' },
+  { nama: 'Doni Pratama', waktu: '15 Okt 2026, 10:45', skor: 80, duration: 95, formattedDuration: '01:35' },
+  { nama: 'Eka Lestari', waktu: '15 Okt 2026, 11:20', skor: 70, duration: 110, formattedDuration: '01:50' },
 ];
 
 /**
@@ -41,9 +41,11 @@ export function isTeacherRecord(nama?: string, item?: any): boolean {
 }
 
 /**
- * Membaca data dari localStorage key 'histori_energi'
+ * Membaca data dari localStorage key 'histori_energi' & 'riwayatKuisEnergi'
  * Mengelompokkan per siswa (skor tertinggi tiap siswa) atau mengambil sesi terbaik
- * Mengurutkan berdasarkan skor tertinggi (descending) dan mengambil 5 teratas
+ * Mengurutkan:
+ * 1. Skor Tertinggi (descending)
+ * 2. Tie-Breaker: Durasi Waktu Tercepat / Detik Terkecil (ascending)
  * PENGAMANAN KHUSUS: Akun Guru TIDAK PERNAH dimasukkan ke Papan Peringkat Juara Siswa!
  */
 export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highest'): {
@@ -54,7 +56,17 @@ export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highes
 } {
   try {
     const raw = localStorage.getItem('histori_energi');
-    let list: Array<{ nama?: string; waktu?: string; skor?: number; isTeacher?: boolean; role?: string }> = [];
+    let list: Array<{
+      nama?: string;
+      waktu?: string;
+      skor?: number;
+      duration?: number;
+      formattedDuration?: string;
+      isTeacher?: boolean;
+      role?: string;
+      jumlahBenar?: number;
+      jumlahSalah?: number;
+    }> = [];
 
     if (raw) {
       const parsed = JSON.parse(raw);
@@ -75,6 +87,10 @@ export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highes
                 nama: k.nama,
                 waktu: k.waktu || '-',
                 skor: k.nilaiAkhir != null ? k.nilaiAkhir : (k.skor ?? 0),
+                duration: k.duration,
+                formattedDuration: k.formattedDuration,
+                jumlahBenar: k.jumlahBenar,
+                jumlahSalah: k.jumlahSalah,
                 isTeacher: k.isTeacher,
                 role: k.role,
               });
@@ -104,11 +120,20 @@ export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highes
       };
     }
 
-    let processedList: Array<{ nama: string; waktu: string; skor: number }> = [];
+    interface ProcessedEntry {
+      nama: string;
+      waktu: string;
+      skor: number;
+      duration?: number;
+      formattedDuration?: string;
+    }
+
+    let processedList: ProcessedEntry[] = [];
 
     if (filterMode === 'highest') {
-      // Kelompokkan per nama siswa (ambil skor tertinggi masing-masing anak, amankan dari kejahilan nama ganda)
-      const map = new Map<string, { nama: string; waktu: string; skor: number }>();
+      // Kelompokkan per nama siswa (ambil skor tertinggi masing-masing anak)
+      // Jika skor sama, ambil percobaan dengan durasi tercepat (tie-breaker)
+      const map = new Map<string, ProcessedEntry>();
 
       list.forEach((item) => {
         const rawName = (item.nama || 'Siswa').trim();
@@ -118,10 +143,21 @@ export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highes
         const key = rawName.toLowerCase();
         const score = typeof item.skor === 'number' ? item.skor : parseInt(String(item.skor || 0), 10) || 0;
         const waktu = item.waktu || '-';
+        const duration = typeof item.duration === 'number' ? item.duration : undefined;
+        const formattedDuration = item.formattedDuration || (duration ? formatTimerMinutesSeconds(duration) : undefined);
+
+        const candidate: ProcessedEntry = { nama: rawName, waktu, skor: score, duration, formattedDuration };
 
         const existing = map.get(key);
         if (!existing || score > existing.skor) {
-          map.set(key, { nama: rawName, waktu, skor: score });
+          map.set(key, candidate);
+        } else if (score === existing.skor) {
+          // Tie breaker pada siswa yang sama: pertahankan percobaan dengan waktu tercepat
+          const existingDur = typeof existing.duration === 'number' && existing.duration > 0 ? existing.duration : 999999;
+          const candidateDur = typeof duration === 'number' && duration > 0 ? duration : 999999;
+          if (candidateDur < existingDur) {
+            map.set(key, candidate);
+          }
         }
       });
 
@@ -130,15 +166,32 @@ export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highes
       // Mode 'all': tampilkan semua riwayat tanpa deduplikasi (tetap tanpa akun guru)
       processedList = list
         .filter((item) => (item.nama || '').trim() !== '' && !isTeacherRecord(item.nama, item))
-        .map((item) => ({
-          nama: (item.nama || 'Siswa').trim(),
-          waktu: item.waktu || '-',
-          skor: typeof item.skor === 'number' ? item.skor : parseInt(String(item.skor || 0), 10) || 0,
-        }));
+        .map((item) => {
+          const duration = typeof item.duration === 'number' ? item.duration : undefined;
+          return {
+            nama: (item.nama || 'Siswa').trim(),
+            waktu: item.waktu || '-',
+            skor: typeof item.skor === 'number' ? item.skor : parseInt(String(item.skor || 0), 10) || 0,
+            duration,
+            formattedDuration: item.formattedDuration || (duration ? formatTimerMinutesSeconds(duration) : undefined),
+          };
+        });
     }
 
-    // Urutkan berdasarkan skor descending, jika sama urutkan berdasarkan waktu
-    processedList.sort((a, b) => b.skor - a.skor);
+    // PENGURUTAN PAPAN JUARA:
+    // 1. Prioritas Utama: Skor Tertinggi (descending)
+    // 2. Tie-Breaker: Durasi Waktu Tercepat / Detik Terkecil (ascending)
+    processedList.sort((a, b) => {
+      if (b.skor !== a.skor) {
+        return b.skor - a.skor;
+      }
+      const durA = typeof a.duration === 'number' && a.duration > 0 ? a.duration : 999999;
+      const durB = typeof b.duration === 'number' && b.duration > 0 ? b.duration : 999999;
+      if (durA !== durB) {
+        return durA - durB;
+      }
+      return 0;
+    });
 
     // Ambil top 5
     const top5 = processedList.slice(0, 5).map((s, idx) => {
@@ -153,6 +206,8 @@ export function getTop5FromHistoriEnergi(filterMode: 'highest' | 'all' = 'highes
         nama: s.nama,
         waktu: s.waktu,
         skor: s.skor,
+        duration: s.duration,
+        formattedDuration: s.formattedDuration || (s.duration ? formatTimerMinutesSeconds(s.duration) : undefined),
         medal,
         avatarEmoji: AVATAR_EMOJIS[idx % AVATAR_EMOJIS.length],
       };

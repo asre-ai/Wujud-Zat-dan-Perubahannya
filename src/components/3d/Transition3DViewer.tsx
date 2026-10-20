@@ -270,11 +270,12 @@ export const Transition3DViewer: React.FC<Transition3DViewerProps> = ({ transiti
 
   // Animation Loop
   useEffect(() => {
-    let clock = new THREE.Clock();
+    const timer = new (THREE as any).Timer();
 
     const animate = () => {
       animFrameIdRef.current = requestAnimationFrame(animate);
-      const delta = clock.getDelta();
+      timer.update();
+      const delta = timer.getDelta();
       const group = modelGroupRef.current;
       if (!group) return;
 
@@ -366,6 +367,7 @@ export const Transition3DViewer: React.FC<Transition3DViewerProps> = ({ transiti
 
     return () => {
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
+      timer.dispose();
     };
   }, [transitionType]);
 

@@ -5,8 +5,9 @@ import {
   getDocs,
   onSnapshot,
   deleteDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { db, handleFirestoreError, OperationType, ensureAnonymousAuth } from '../firebase';
 import { QuizHistoryRecord, QUIZ_STORAGE_KEY, isTeacherName } from './quizHistory';
 
 const QUIZ_RESULTS_PATH = 'quiz_results';
@@ -15,32 +16,58 @@ const STUDENT_SESSIONS_PATH = 'student_sessions';
 /**
  * Menyimpan sesi login siswa ke Firestore agar perangkat lain (laptop guru / teman)
  * langsung mengetahui ada siswa baru yang masuk secara real-time.
+ * Menggunakan tipe data standar: string, number, dan serverTimestamp().
  */
-export async function saveStudentSessionToCloud(nama: string, waktu: string, skor: number = 0): Promise<void> {
+export async function saveStudentSessionToCloud(nama: string, waktu: string, skor: number = 0): Promise<boolean> {
   const cleanName = (nama || '').trim();
   if (!cleanName || cleanName === 'Siswa Cilik' || isTeacherName(cleanName)) {
-    return;
+    return false;
   }
 
-  // ID dokumen yang aman dan terurut waktu (hanya huruf, angka, underscore, hyphen)
-  const randomPart = Math.random().toString(36).substring(2, 10).replace(/[^a-zA-Z0-9]/g, 'x');
-  const docId = `session_${Date.now()}_${randomPart}`;
-  const payload = {
-    nama: cleanName.substring(0, 60),
-    waktu: (waktu || '-').substring(0, 60),
-    skor: Math.max(0, Math.min(100, Math.round(Number(skor) || 0))),
-    createdAt: new Date().toISOString(),
-  };
-
   try {
+    // 1. Otentikasi Anonim Otomatis: pastikan sesi auth anonim aktif jika belum login
+    await ensureAnonymousAuth().catch(() => null);
+
+    // ID dokumen yang aman dan terurut waktu (hanya huruf, angka, underscore, hyphen)
+    const randomPart = Math.random().toString(36).substring(2, 10).replace(/[^a-zA-Z0-9]/g, 'x');
+    const docId = `session_${Date.now()}_${randomPart}`;
+    
+    // Objek data dengan tipe standar: string, number, dan serverTimestamp()
+    const payload = {
+      nama: String(cleanName).substring(0, 60),
+      waktu: String(waktu || '-').substring(0, 60),
+      skor: Math.max(0, Math.min(100, Math.round(Number(skor) || 0))),
+      createdAt: serverTimestamp(),
+    };
+
     await setDoc(doc(db, STUDENT_SESSIONS_PATH, docId), payload);
+    return true;
   } catch (error) {
-    console.error('Gagal sinkronisasi sesi siswa ke cloud:', error);
+    // Graceful Fallback: Simpan sesi ke localStorage secara otomatis jika terjadi kendala cloud
+    console.warn('⚠️ Gagal sinkronisasi sesi siswa ke Cloud Firestore (otomatis beralih ke penyimpanan lokal):', error);
+    try {
+      const rawPending = localStorage.getItem('pending_cloud_sessions');
+      let pendingList: any[] = [];
+      if (rawPending) {
+        try {
+          const parsed = JSON.parse(rawPending);
+          if (Array.isArray(parsed)) pendingList = parsed;
+        } catch {}
+      }
+      pendingList.push({
+        nama: String(cleanName).substring(0, 60),
+        waktu: String(waktu || '-').substring(0, 60),
+        skor: Math.max(0, Math.min(100, Math.round(Number(skor) || 0))),
+      });
+      localStorage.setItem('pending_cloud_sessions', JSON.stringify(pendingList));
+    } catch {}
+
     try {
       handleFirestoreError(error, OperationType.WRITE, STUDENT_SESSIONS_PATH);
     } catch {
-      // Tetap lanjutkan aplikasi meski offline
+      // Graceful offline fallback
     }
+    return false;
   }
 }
 
@@ -121,38 +148,137 @@ export function checkAndTriggerOneTimeRestart(): void {
 }
 
 /**
+ * Memastikan catatan kuis tersimpan di localStorage ('riwayatKuisEnergi' & 'histori_energi')
+ * saat terjadi kendala sinkronisasi cloud (Fallback Otomatis)
+ */
+function ensureQuizSavedLocally(record: QuizHistoryRecord): void {
+  try {
+    const rawLocal = localStorage.getItem(QUIZ_STORAGE_KEY);
+    let localList: QuizHistoryRecord[] = [];
+    if (rawLocal) {
+      try {
+        const parsed = JSON.parse(rawLocal);
+        if (Array.isArray(parsed)) localList = parsed;
+      } catch {}
+    }
+    const alreadySaved = localList.some(
+      (r) => r.nama === record.nama && r.waktu === record.waktu && r.nilaiAkhir === record.nilaiAkhir
+    );
+    if (!alreadySaved) {
+      localList.push(record);
+      localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(localList));
+    }
+
+    if (!record.isTeacher && !isTeacherName(record.nama)) {
+      const rawHistori = localStorage.getItem('histori_energi');
+      let historiList: any[] = [];
+      if (rawHistori) {
+        try {
+          const parsed = JSON.parse(rawHistori);
+          if (Array.isArray(parsed)) historiList = parsed;
+        } catch {}
+      }
+      const historiSaved = historiList.some(
+        (h) => h.nama === record.nama && h.waktu === record.waktu && h.skor === record.nilaiAkhir
+      );
+      if (!historiSaved) {
+        historiList.push({
+          nama: record.nama,
+          waktu: record.waktu,
+          skor: record.nilaiAkhir,
+          jumlahBenar: record.jumlahBenar,
+          jumlahSalah: record.jumlahSalah,
+          duration: record.duration,
+          formattedDuration: record.formattedDuration,
+        });
+        localStorage.setItem('histori_energi', JSON.stringify(historiList));
+      }
+    }
+    window.dispatchEvent(new Event('storage'));
+  } catch (err) {
+    console.warn('Kendala saat memastikan simpanan kuis lokal:', err);
+  }
+}
+
+/**
  * Menyimpan hasil kuis siswa ke Firestore agar langsung muncul di Papan Juara (Top Scorers)
  * dan Panel Guru di gadget lain.
- * PENGAMANAN: Akun guru tidak disimpan ke papan hasil kuis siswa.
+ * PENGAMANAN & TIPE DATA STANDAR:
+ * - Menggunakan tipe data standar Firestore: string, number, dan serverTimestamp().
+ * - Dibungkus try...catch dengan graceful fallback ke localStorage.
  */
-export async function saveQuizResultToCloud(record: QuizHistoryRecord): Promise<void> {
+export async function saveQuizResultToCloud(record: QuizHistoryRecord): Promise<boolean> {
   const cleanName = (record.nama || '').trim();
-  if (!cleanName || cleanName === 'Siswa Cilik') return;
+  if (!cleanName || cleanName === 'Siswa Cilik') return false;
 
   // Jika guru, jangan masukkan ke ranking siswa di cloud
   const isTeacher = record.isTeacher === true || isTeacherName(cleanName);
-  if (isTeacher) return;
-
-  const randomPart = Math.random().toString(36).substring(2, 10).replace(/[^a-zA-Z0-9]/g, 'x');
-  const docId = `quiz_${Date.now()}_${randomPart}`;
-  const payload = {
-    nama: cleanName.substring(0, 60),
-    waktu: (record.waktu || '-').substring(0, 60),
-    skor: Math.max(0, Math.min(100, Math.round(Number(record.nilaiAkhir) || 0))),
-    jumlahBenar: Math.max(0, Math.min(10, Math.round(Number(record.jumlahBenar) || 0))),
-    jumlahSalah: Math.max(0, Math.min(10, Math.round(Number(record.jumlahSalah) || 0))),
-    createdAt: new Date().toISOString(),
-  };
+  if (isTeacher) return false;
 
   try {
+    // 1. Otentikasi Anonim Otomatis: Pastikan sesi terautentikasi (auth.currentUser != null)
+    await ensureAnonymousAuth().catch(() => null);
+
+    const randomPart = Math.random().toString(36).substring(2, 10).replace(/[^a-zA-Z0-9]/g, 'x');
+    const docId = `quiz_${Date.now()}_${randomPart}`;
+
+    // Objek data Firestore dengan tipe data standar (string, number, serverTimestamp)
+    const payload: any = {
+      nama: String(cleanName).substring(0, 60),
+      waktu: String(record.waktu || '-').substring(0, 60),
+      skor: Math.max(0, Math.min(100, Math.round(Number(record.nilaiAkhir) || 0))),
+      jumlahBenar: Math.max(0, Math.min(10, Math.round(Number(record.jumlahBenar) || 0))),
+      jumlahSalah: Math.max(0, Math.min(10, Math.round(Number(record.jumlahSalah) || 0))),
+      createdAt: serverTimestamp(),
+    };
+
+    if (typeof record.duration === 'number') {
+      payload.duration = Math.max(0, Math.round(Number(record.duration)));
+    }
+    if (record.formattedDuration) {
+      payload.formattedDuration = String(record.formattedDuration).substring(0, 40);
+    }
+
     await setDoc(doc(db, QUIZ_RESULTS_PATH, docId), payload);
+    console.log('✅ Berhasil menyinkronkan hasil kuis ke Cloud Firestore:', docId);
+
+    // Kirim sinyal pemberitahuan halus bahwa data berhasil tersinkronisasi ke Cloud
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('quiz-sync-status', {
+          detail: {
+            status: 'cloud',
+            message: 'Nilai tersinkronisasi ke Cloud Firestore',
+          },
+        })
+      );
+    }
+
+    return true;
   } catch (error) {
-    console.error('Gagal sinkronisasi hasil kuis ke cloud:', error);
+    // 2. Graceful Fallback: Jika terjadi kendala sinkronisasi cloud (misal permission/offline),
+    // simpan data ke localStorage secara otomatis dan beri notifikasi halus tanpa menghentikan kuis
+    console.warn('⚠️ Kendala sinkronisasi Cloud Firestore. Mengaktifkan fallback otomatis ke localStorage:', error);
+
+    ensureQuizSavedLocally(record);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('quiz-sync-status', {
+          detail: {
+            status: 'local',
+            message: 'Nilai tersimpan aman di perangkat (mode offline/lokal)',
+          },
+        })
+      );
+    }
+
     try {
       handleFirestoreError(error, OperationType.WRITE, QUIZ_RESULTS_PATH);
     } catch {
       // Graceful offline fallback
     }
+    return false;
   }
 }
 
@@ -187,6 +313,8 @@ function mergeCloudQuizResults(cloudRecords: any[]): void {
           jumlahBenar: c.jumlahBenar ?? Math.round((c.skor || 0) / 10),
           jumlahSalah: c.jumlahSalah ?? (10 - Math.round((c.skor || 0) / 10)),
           nilaiAkhir: c.skor ?? c.nilaiAkhir ?? 0,
+          duration: typeof c.duration === 'number' ? c.duration : undefined,
+          formattedDuration: c.formattedDuration,
         });
         hasNew = true;
       }
@@ -222,6 +350,8 @@ function mergeCloudQuizResults(cloudRecords: any[]): void {
           skor: c.skor ?? c.nilaiAkhir ?? 0,
           jumlahBenar: c.jumlahBenar ?? Math.round((c.skor || 0) / 10),
           jumlahSalah: c.jumlahSalah ?? (10 - Math.round((c.skor || 0) / 10)),
+          duration: typeof c.duration === 'number' ? c.duration : undefined,
+          formattedDuration: c.formattedDuration,
         });
         historiUpdated = true;
       }

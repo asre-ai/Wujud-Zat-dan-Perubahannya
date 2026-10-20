@@ -1,4 +1,4 @@
-export type NavPage = 'home' | 'states' | 'lab' | 'transitions' | 'quiz' | 'glossary';
+export type NavPage = 'home' | 'states' | 'lab' | 'transitions' | 'videos' | 'quiz' | 'glossary';
 
 export type StateOfMatter = 'solid' | 'liquid' | 'gas';
 

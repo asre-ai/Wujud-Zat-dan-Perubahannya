@@ -105,13 +105,24 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   sound.playPop();
                   onOpenTopScorers();
                 }}
-                className="w-full mt-1 sm:mt-2 py-3 px-4 rounded-[22px] bg-gradient-to-r from-amber-100 via-yellow-100 to-amber-200 hover:from-amber-200 hover:to-yellow-200 text-amber-950 font-black text-xs sm:text-sm border-2 border-amber-300 shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 font-heading"
+                className="w-full sm:flex-1 py-3 px-4 rounded-[22px] bg-gradient-to-r from-amber-100 via-yellow-100 to-amber-200 hover:from-amber-200 hover:to-yellow-200 text-amber-950 font-black text-xs sm:text-sm border-2 border-amber-300 shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 font-heading"
                 title="Lihat 5 Siswa dengan Nilai Tertinggi (Medali Emas, Perak, Perunggu)"
               >
                 <Trophy className="w-4 h-4 text-amber-900" />
-                <span>🏆 Papan Juara: Lihat Top 5 Scorers Kelas</span>
+                <span>🏆 Papan Juara Kelas</span>
               </button>
             )}
+
+            <button
+              onClick={() => {
+                sound.playPop();
+                onNavigate('videos');
+              }}
+              className="w-full sm:flex-1 py-3 px-4 rounded-[22px] bg-gradient-to-r from-rose-100 via-red-50 to-amber-100 hover:from-rose-200 hover:to-red-100 text-rose-950 font-black text-xs sm:text-sm border-2 border-rose-300 shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 font-heading"
+              title="Buka Kanal Video Edukasi Sains 3D"
+            >
+              <span>📺 Kanal Video Edukasi</span>
+            </button>
           </div>
         </div>
       </section>

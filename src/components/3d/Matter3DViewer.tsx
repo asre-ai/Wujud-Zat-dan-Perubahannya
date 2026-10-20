@@ -129,7 +129,7 @@ export const Matter3DViewer: React.FC<Matter3DViewerProps> = ({
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.1;
     rendererRef.current = renderer;
@@ -803,12 +803,13 @@ export const Matter3DViewer: React.FC<Matter3DViewerProps> = ({
 
   // Main Animation Loop with Sparkles and Object Vibrations
   useEffect(() => {
-    const clock = new THREE.Clock();
+    const timer = new (THREE as any).Timer();
 
     const animate = () => {
       animFrameIdRef.current = requestAnimationFrame(animate);
 
-      const elapsedTime = clock.getElapsedTime();
+      timer.update();
+      const elapsedTime = timer.getElapsed();
 
       // Smooth camera orbit rotation lerp with clamp bounds
       rotationRef.current.x += (targetRotationRef.current.x - rotationRef.current.x) * 0.1;
@@ -958,6 +959,7 @@ export const Matter3DViewer: React.FC<Matter3DViewerProps> = ({
 
     return () => {
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
+      timer.dispose();
     };
   }, [activeState, isParticleMode, particleEnergy]);
 

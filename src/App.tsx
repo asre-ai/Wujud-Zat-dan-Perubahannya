@@ -15,6 +15,7 @@ import { LabView } from './components/views/LabView';
 import { TransitionsView } from './components/views/TransitionsView';
 import { QuizView } from './components/views/QuizView';
 import { GlossaryView } from './components/views/GlossaryView';
+import { VideosView } from './components/views/VideosView';
 import { TopScorersModal } from './components/common/TopScorersModal';
 import { startFirebaseRealtimeSync } from './utils/firebaseSync';
 import confetti from 'canvas-confetti';
@@ -141,6 +142,7 @@ export default function App() {
               onOpenTopScorers={() => setIsTopScorersOpen(true)}
             />
           )}
+          {currentPage === 'videos' && <VideosView />}
           {currentPage === 'glossary' && (
             <GlossaryView onNavigate={handleNavigate} />
           )}
@@ -183,6 +185,12 @@ export default function App() {
               className="hover:text-sky-600 transition-colors cursor-pointer"
             >
               Perubahan Wujud
+            </button>
+            <button
+              onClick={() => handleNavigate('videos')}
+              className="hover:text-red-600 transition-colors cursor-pointer"
+            >
+              Kanal Video
             </button>
             <button
               onClick={() => handleNavigate('quiz')}

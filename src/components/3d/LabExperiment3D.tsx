@@ -143,7 +143,7 @@ export const LabExperiment3D: React.FC = () => {
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     rendererRef.current = renderer;
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
@@ -443,11 +443,12 @@ export const LabExperiment3D: React.FC = () => {
 
   // Animation Loop for Experiment Progression
   useEffect(() => {
-    let clock = new THREE.Clock();
+    const timer = new (THREE as any).Timer();
 
     const animate = () => {
       animFrameIdRef.current = requestAnimationFrame(animate);
-      const delta = clock.getDelta();
+      timer.update();
+      const delta = timer.getDelta();
       const group = labGroupRef.current;
       if (!group) return;
 
@@ -485,7 +486,7 @@ export const LabExperiment3D: React.FC = () => {
           innerMat.opacity = 0.95;
 
           // Flame flicker
-          const flicker = 1 + Math.sin(clock.getElapsedTime() * 25) * 0.08;
+          const flicker = 1 + Math.sin(timer.getElapsed() * 25) * 0.08;
           flameMesh.scale.set(flicker, flicker, flicker);
         } else {
           // Flame is OFF
@@ -579,6 +580,7 @@ export const LabExperiment3D: React.FC = () => {
 
     return () => {
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
+      timer.dispose();
     };
   }, [selectedExp]);
 

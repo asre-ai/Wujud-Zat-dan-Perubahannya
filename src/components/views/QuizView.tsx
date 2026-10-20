@@ -12,8 +12,11 @@ import {
   isCurrentUserTeacher,
   isTeacherName,
   getWaktuFormatted,
+  formatTimerMinutesSeconds,
+  formatDurationIndonesian,
 } from '../../utils/quizHistory';
 import { saveStudentSessionToCloud } from '../../utils/firebaseSync';
+import { ensureAnonymousAuth } from '../../firebase';
 import confetti from 'canvas-confetti';
 import {
   CheckCircle2,
@@ -31,6 +34,7 @@ import {
   ChevronDown,
   ChevronUp,
   FileText,
+  Timer,
 } from 'lucide-react';
 
 interface QuizViewProps {
@@ -80,9 +84,54 @@ export const QuizView: React.FC<QuizViewProps> = ({
   const [scoreCount, setScoreCount] = useState<number>(0);
   const [isFinished, setIsFinished] = useState<boolean>(false);
 
+  // Otentikasi Anonim Otomatis: Aktifkan Anonymous Auth seawal mungkin saat modul Kuis dimuat
+  React.useEffect(() => {
+    ensureAnonymousAuth().catch(() => {});
+  }, []);
+
+  // ⏱️ TIMER DURASI KUIS:
+  // - Start / Resume: Berjalan saat kuis dimulai atau soal berikutnya ditampilkan (siswa sedang berpikir)
+  // - Pause (Henti Sementara): Berhenti segera setelah siswa mengklik opsi jawaban (isAnswered === true)
+  //   agar waktu membaca penjelasan/feedback tidak membebani durasi siswa
+  // - Continue: Berlanjut kembali saat siswa menekan tombol "Soal Selanjutnya →"
+  // - Reset & Cleanup: Timer di-reset ke 0 pada awal kuis & dibersihkan via clearInterval
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+
+  React.useEffect(() => {
+    let timerInterval: any = null;
+
+    if (isStarted && !isFinished && !isAnswered) {
+      timerInterval = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+    }
+
+    return () => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    };
+  }, [isStarted, isFinished, isAnswered]);
+
   // Status ekspor kuis siswa & guru
   const [quizRecord, setQuizRecord] = useState<QuizHistoryRecord | null>(null);
   const [downloadNotice, setDownloadNotice] = useState<string | null>(null);
+
+  // Pesan pemberitahuan halus sinkronisasi data kuis (cloud atau fallback lokal)
+  const [syncNotice, setSyncNotice] = useState<{ status: 'cloud' | 'local'; message: string } | null>(null);
+
+  React.useEffect(() => {
+    const handleSyncStatus = (e: any) => {
+      if (e.detail) {
+        setSyncNotice({
+          status: e.detail.status || 'local',
+          message: e.detail.message || 'Nilai kuis tersimpan aman di perangkat.',
+        });
+      }
+    };
+    window.addEventListener('quiz-sync-status', handleSyncStatus);
+    return () => window.removeEventListener('quiz-sync-status', handleSyncStatus);
+  }, []);
 
   // Riwayat jawaban lengkap siswa per butir soal untuk tinjauan hasil
   interface StudentAnswerItem {
@@ -113,6 +162,10 @@ export const QuizView: React.FC<QuizViewProps> = ({
 
     setNameError(null);
     const effectiveName = isTeacher ? (cleanName || 'Bapak/Ibu Guru') : cleanName;
+
+    // Otentikasi Anonim: Pastikan userId telah dibuat saat kuis dimulai
+    ensureAnonymousAuth().catch(() => {});
+
     // Kunci Nama: Simpan ke localStorage dan jadikan input tidak bisa diedit
     setActiveStudentName(effectiveName);
     setIsNameLocked(true);
@@ -122,6 +175,8 @@ export const QuizView: React.FC<QuizViewProps> = ({
     setIsAnswered(false);
     setScoreCount(0);
     setIsFinished(false);
+    setElapsedSeconds(0);
+    setSyncNotice(null);
     setAnswersHistory([]);
 
     // Sinkronisasi sesi siswa ke Cloud Firestore antar-gadget
@@ -181,13 +236,21 @@ export const QuizView: React.FC<QuizViewProps> = ({
       const lockedName = studentNameInput.trim() || getActiveStudentName();
 
       // Simpan riwayat kuis ke localStorage ('riwayatKuisEnergi' & 'histori_energi') secara Append-Only
-      const saved = saveQuizResult({
-        nama: lockedName,
-        jumlahBenar: correctAnswers,
-        jumlahSalah: wrongAnswers,
-        nilaiAkhir: totalScore,
-      });
-      setQuizRecord(saved);
+      // dan sinkronkan ke Firebase Firestore dengan penanganan error aman (Graceful Fallback)
+      // Sertakan total durasi aktif (elapsedSeconds) sebagai data tie-breaker waktu tercepat
+      try {
+        const saved = saveQuizResult({
+          nama: lockedName,
+          jumlahBenar: correctAnswers,
+          jumlahSalah: wrongAnswers,
+          nilaiAkhir: totalScore,
+          duration: elapsedSeconds,
+          formattedDuration: formatTimerMinutesSeconds(elapsedSeconds),
+        });
+        setQuizRecord(saved);
+      } catch (err) {
+        console.warn('⚠️ Kendala saat menyimpan hasil kuis (aplikasi tetap menampilkan skor):', err);
+      }
 
       // Berikan Lencana Prestasi
       let badge: 'none' | 'explorer' | 'expert' = 'none';
@@ -224,8 +287,10 @@ export const QuizView: React.FC<QuizViewProps> = ({
     setIsAnswered(false);
     setScoreCount(0);
     setIsFinished(false);
+    setElapsedSeconds(0);
     setQuizRecord(null);
     setDownloadNotice(null);
+    setSyncNotice(null);
     setAnswersHistory([]);
     // Nama tetap terkunci untuk siswa yang sedang mengerjakan
   };
@@ -431,13 +496,31 @@ export const QuizView: React.FC<QuizViewProps> = ({
             </div>
           )}
 
-          {/* Big Score Display */}
+          {/* Big Score Display dengan Total Waktu Pengerjaan */}
           <div className="my-5 p-6 rounded-[28px] bg-amber-50/70 border-2 border-amber-200/90 w-full max-w-md shadow-xs">
-            <span className="text-xs font-black uppercase tracking-wider text-amber-900 block font-heading">
-              Skor Kamu:
-            </span>
-            <div className="text-5xl font-black text-orange-600 font-heading mt-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-black uppercase tracking-wider text-amber-900 block font-heading">
+                Skor Kamu:
+              </span>
+              {/* Badge Durasi Total */}
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-200/90 border border-amber-300 text-amber-950 text-xs font-black font-heading shadow-2xs">
+                <Timer className="w-3.5 h-3.5 text-amber-800" />
+                <span>⏱️ {formatDurationIndonesian(quizRecord?.duration ?? elapsedSeconds)}</span>
+              </span>
+            </div>
+
+            <div className="text-5xl font-black text-orange-600 font-heading mt-2">
               {finalScore} <span className="text-2xl font-bold text-slate-400">/ 100</span>
+            </div>
+
+            {/* Rekap Format Bersama Sesuai Ketentuan User: Skor: 100/100 | Waktu Pengerjaan: 1 Menit 25 Detik */}
+            <div className="mt-3.5 py-2 px-3.5 rounded-xl bg-white/90 border border-amber-300/80 text-xs sm:text-sm font-extrabold text-slate-700 flex flex-wrap items-center justify-center gap-2">
+              <span>🎯 Skor: <strong className="text-orange-600 font-black">{finalScore}/100</strong></span>
+              <span className="text-slate-300">|</span>
+              <span className="flex items-center gap-1">
+                ⏱️ Waktu Pengerjaan: <strong className="text-amber-900 font-black">{formatDurationIndonesian(quizRecord?.duration ?? elapsedSeconds)}</strong>
+                <span className="text-slate-500 font-mono text-xs">({formatTimerMinutesSeconds(quizRecord?.duration ?? elapsedSeconds)})</span>
+              </span>
             </div>
 
             {/* Rekap Rincian Benar / Salah */}
@@ -451,6 +534,20 @@ export const QuizView: React.FC<QuizViewProps> = ({
                 <span>Salah: <strong>{wrongCount}</strong></span>
               </div>
             </div>
+
+            {/* Pesan Pemberitahuan Halus Status Sinkronisasi */}
+            {syncNotice && (
+              <div
+                className={`mt-3.5 py-1.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all animate-in fade-in ${
+                  syncNotice.status === 'cloud'
+                    ? 'bg-emerald-100/90 border border-emerald-300 text-emerald-950'
+                    : 'bg-amber-100/90 border border-amber-300 text-amber-950'
+                }`}
+              >
+                <span>{syncNotice.status === 'cloud' ? '☁️' : '💾'}</span>
+                <span>{syncNotice.message}</span>
+              </div>
+            )}
           </div>
 
           {/* Feedback message */}
@@ -642,7 +739,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
     <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-6">
       {/* Quiz Progress Indicator Bar */}
       <div className="bg-white/98 p-5 rounded-[28px] border-3 border-sky-300 shadow-sm flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm font-black text-slate-900">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 text-xs sm:text-sm font-black text-slate-900">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="flex items-center gap-1.5 text-orange-700 font-heading">
               <span>📝 Soal {currentIdx + 1} dari 10</span>
@@ -654,9 +751,32 @@ export const QuizView: React.FC<QuizViewProps> = ({
               <span className="text-[10px] bg-amber-200 text-amber-950 px-1.5 py-0.2 rounded font-black">🔒 Terkunci</span>
             </span>
           </div>
-          <span className="font-heading text-amber-950 font-black bg-amber-100 px-3.5 py-1 rounded-full border-2 border-amber-300 shadow-2xs">
-            Skor Sementara: {scoreCount * 10} poin
-          </span>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* ⏱️ Indikator Timer Kuis (Auto-Pause saat feedback muncul) */}
+            <div
+              className={`inline-flex items-center gap-1.5 px-3 py-1 sm:py-1.5 rounded-full border-2 font-heading transition-all ${
+                isAnswered
+                  ? 'bg-amber-100/80 border-amber-300 text-amber-800'
+                  : 'bg-yellow-100 border-amber-400 text-amber-950 shadow-2xs'
+              }`}
+              title={isAnswered ? "Timer dijeda sementara saat kamu membaca pembahasan" : "Waktu pengerjaan aktif berjalan"}
+            >
+              <Timer className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${!isAnswered ? 'text-amber-700 animate-pulse' : 'text-amber-600'}`} />
+              <span className="text-xs sm:text-sm font-black font-mono tracking-tight">
+                ⏱️ {formatTimerMinutesSeconds(elapsedSeconds)}
+              </span>
+              {isAnswered && (
+                <span className="text-[10px] font-black uppercase px-1.5 py-0.2 rounded-md bg-amber-200 text-amber-900 border border-amber-300/60">
+                  Jeda
+                </span>
+              )}
+            </div>
+
+            <span className="font-heading text-amber-950 font-black bg-amber-100 px-3.5 py-1 sm:py-1.5 rounded-full border-2 border-amber-300 shadow-2xs">
+              Skor Sementara: {scoreCount * 10} poin
+            </span>
+          </div>
         </div>
 
         {/* 10 Dots Progress */}

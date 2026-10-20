@@ -70,6 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'states', label: 'Wujud Zat', icon: '🧊' },
     { id: 'lab', label: 'Eksperimen 3D', icon: '🔬' },
     { id: 'transitions', label: 'Perubahan Wujud', icon: '🔄' },
+    { id: 'videos', label: 'Kanal Video', icon: '📺' },
     { id: 'quiz', label: 'Kuis', icon: '📝' },
   ];
 
@@ -89,6 +90,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     transitions: {
       active: 'bg-purple-600 text-white shadow-md shadow-purple-600/30 ring-2 ring-purple-300 scale-[1.02] border-b-2 border-purple-800 font-black',
       inactive: 'bg-white/95 hover:bg-purple-50 text-purple-950 border-2 border-purple-300 border-b-4 border-b-purple-500 active:border-b-2 shadow-2xs font-extrabold',
+    },
+    videos: {
+      active: 'bg-red-600 text-white shadow-md shadow-red-600/30 ring-2 ring-red-300 scale-[1.02] border-b-2 border-red-800 font-black',
+      inactive: 'bg-white/95 hover:bg-red-50 text-red-950 border-2 border-red-300 border-b-4 border-b-red-500 active:border-b-2 shadow-2xs font-extrabold',
     },
     quiz: {
       active: 'bg-amber-500 text-white shadow-md shadow-amber-500/30 ring-2 ring-amber-300 scale-[1.02] border-b-2 border-amber-700 font-black',

@@ -17,13 +17,15 @@ service cloud.firestore {
     // 2. Validator Blueprint untuk Hasil Kuis (Append-Only, Anti-Ghost-Field)
     function isValidQuizResult(data) {
       return data.keys().hasAll(['nama', 'waktu', 'skor', 'jumlahBenar', 'jumlahSalah']) &&
-             data.keys().hasOnly(['nama', 'waktu', 'skor', 'jumlahBenar', 'jumlahSalah', 'createdAt', 'isTeacher']) &&
+             data.keys().hasOnly(['nama', 'waktu', 'skor', 'jumlahBenar', 'jumlahSalah', 'createdAt', 'isTeacher', 'duration', 'formattedDuration']) &&
              data.nama is string && data.nama.size() >= 1 && data.nama.size() <= 60 &&
              data.waktu is string && data.waktu.size() <= 60 &&
              data.skor is number && data.skor >= 0 && data.skor <= 100 &&
              data.jumlahBenar is number && data.jumlahBenar >= 0 && data.jumlahBenar <= 10 &&
              data.jumlahSalah is number && data.jumlahSalah >= 0 && data.jumlahSalah <= 10 &&
-             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60)) &&
+             (!('duration' in data) || (data.duration is number && data.duration >= 0)) &&
+             (!('formattedDuration' in data) || (data.formattedDuration is string && data.formattedDuration.size() <= 60)) &&
+             (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 60)) &&
              (!('isTeacher' in data) || data.isTeacher is bool);
     }
 
@@ -34,7 +36,7 @@ service cloud.firestore {
              data.nama is string && data.nama.size() >= 1 && data.nama.size() <= 60 &&
              data.waktu is string && data.waktu.size() <= 60 &&
              data.skor is number && data.skor >= 0 && data.skor <= 100 &&
-             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60));
+             (!('createdAt' in data) || data.createdAt is timestamp || (data.createdAt is string && data.createdAt.size() <= 60));
     }
 
     // 4. Koleksi Hasil Kuis Siswa: Terbuka untuk dibaca seluruh kelas & guru, buat baru hanya dengan skema valid, izinkan hapus saat reset kelas

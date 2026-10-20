@@ -11,10 +11,38 @@ export interface QuizHistoryRecord {
   jumlahSalah: number;
   nilaiAkhir: number;
   isTeacher?: boolean;
+  duration?: number; // Durasi aktif pengerjaan dalam detik
+  formattedDuration?: string; // Format durasi misal "01:25" atau "1 Menit 25 Detik"
 }
 
 export const QUIZ_STORAGE_KEY = 'riwayatKuisEnergi';
 export const ACTIVE_STUDENT_KEY = 'siswa_aktif_nama';
+
+/**
+ * Format detik ke format mm:ss (contoh: 01:45)
+ */
+export function formatTimerMinutesSeconds(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds || 0));
+  const mm = Math.floor(s / 60).toString().padStart(2, '0');
+  const ss = (s % 60).toString().padStart(2, '0');
+  return `${mm}:${ss}`;
+}
+
+/**
+ * Format detik ke bahasa Indonesia (contoh: 1 Menit 25 Detik atau 45 Detik)
+ */
+export function formatDurationIndonesian(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds || 0));
+  const m = Math.floor(s / 60);
+  const remSec = s % 60;
+  if (m === 0) {
+    return `${remSec} Detik`;
+  }
+  if (remSec === 0) {
+    return `${m} Menit`;
+  }
+  return `${m} Menit ${remSec} Detik`;
+}
 
 import { saveQuizResultToCloud, clearAllHistoryCloudAndLocal } from './firebaseSync';
 
@@ -149,8 +177,12 @@ export function saveQuizResult(data: {
   jumlahBenar: number;
   jumlahSalah: number;
   nilaiAkhir: number;
+  duration?: number;
+  formattedDuration?: string;
 }): QuizHistoryRecord {
   const isTeacher = isCurrentUserTeacher() || isTeacherName(data.nama);
+
+  const formattedDur = data.formattedDuration || (typeof data.duration === 'number' ? formatTimerMinutesSeconds(data.duration) : undefined);
 
   const newRecord: QuizHistoryRecord = {
     nama: data.nama || getActiveStudentName(),
@@ -159,6 +191,8 @@ export function saveQuizResult(data: {
     jumlahSalah: data.jumlahSalah,
     nilaiAkhir: data.nilaiAkhir,
     isTeacher: isTeacher || undefined,
+    duration: typeof data.duration === 'number' ? Math.max(0, Math.round(data.duration)) : undefined,
+    formattedDuration: formattedDur,
   };
 
   try {
@@ -180,13 +214,15 @@ export function saveQuizResult(data: {
         } catch (e) {}
       }
 
-      // APPEND-ONLY: Selalu tambahkan riwayat percobaan baru bagi siswa
+      // APPEND-ONLY: Selalu tambahkan riwayat percobaan baru bagi siswa dengan durasi aktif
       loginList.push({
         nama: studentName,
         waktu: newRecord.waktu,
         skor: data.nilaiAkhir,
         jumlahBenar: data.jumlahBenar,
         jumlahSalah: data.jumlahSalah,
+        duration: newRecord.duration,
+        formattedDuration: newRecord.formattedDuration,
       });
       localStorage.setItem('histori_energi', JSON.stringify(loginList));
     }
@@ -231,12 +267,14 @@ export function exportStudentCsv(record: QuizHistoryRecord): void {
   const filename = `Nilai_${sanitizeName}.csv`;
 
   const escapeCsv = (str: string) => `"${str.replace(/"/g, '""')}"`;
+  const durStr = record.formattedDuration || (typeof record.duration === 'number' ? formatTimerMinutesSeconds(record.duration) : '-');
 
   const csvRows = [
-    ['Nama', 'Waktu/Tanggal', 'Jumlah Benar', 'Jumlah Salah', 'Nilai Akhir'].join(','),
+    ['Nama', 'Waktu/Tanggal', 'Durasi Pengerjaan', 'Jumlah Benar', 'Jumlah Salah', 'Nilai Akhir'].join(','),
     [
       escapeCsv(record.nama),
       escapeCsv(record.waktu),
+      escapeCsv(durStr),
       record.jumlahBenar,
       record.jumlahSalah,
       record.nilaiAkhir,
@@ -261,15 +299,17 @@ export function exportTeacherCsv(filterMode: 'all' | 'highest' = 'all'): { succe
   const escapeCsv = (str: string) => `"${str.replace(/"/g, '""')}"`;
 
   const csvRows = [
-    ['No', 'Nama Siswa', 'Waktu/Tanggal', 'Jumlah Benar', 'Jumlah Salah', 'Nilai Akhir', 'Keterangan'].join(','),
+    ['No', 'Nama Siswa', 'Waktu/Tanggal', 'Durasi Pengerjaan', 'Jumlah Benar', 'Jumlah Salah', 'Nilai Akhir', 'Keterangan'].join(','),
   ];
 
   list.forEach((item, index) => {
+    const durStr = item.formattedDuration || (typeof item.duration === 'number' ? formatTimerMinutesSeconds(item.duration) : '-');
     csvRows.push(
       [
         index + 1,
         escapeCsv(item.nama || 'Siswa'),
         escapeCsv(item.waktu || '-'),
+        escapeCsv(durStr),
         item.jumlahBenar ?? 0,
         item.jumlahSalah ?? 0,
         item.nilaiAkhir ?? 0,

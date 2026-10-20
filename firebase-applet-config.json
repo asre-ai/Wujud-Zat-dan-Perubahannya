@@ -1,12 +1,12 @@
 {
-  "projectId": "gen-lang-client-0445306222",
-  "appId": "1:511759122975:web:79164317d99ed48e9f4b2a",
-  "apiKey": "AIzaSyA-N-oJb7SbKVgpK992xRtpMFaNRjBfomo",
-  "authDomain": "gen-lang-client-0445306222.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-wujudzatperubaha-c8a4b0aa-a7db-4413-a293-7ddb7e8d7600",
-  "storageBucket": "gen-lang-client-0445306222.firebasestorage.app",
-  "messagingSenderId": "511759122975",
+  "projectId": "zat-3d-edu",
+  "appId": "1:704027833917:web:0851eb7e351fcf18d2dc54",
+  "apiKey": "AIzaSyAl9_MiH5UUtZDtWN7DRu8ncHF_GLZEhNg",
+  "authDomain": "zat-3d-edu.firebaseapp.com",
+  "databaseURL": "https://zat-3d-edu-default-rtdb.asia-southeast1.firebasedatabase.app",
+  "storageBucket": "zat-3d-edu.firebasestorage.app",
+  "messagingSenderId": "704027833917",
   "measurementId": "",
-  "oAuthClientId": "511759122975-teepf195g8n4hnpffe6s2l6lojhkfrme.apps.googleusercontent.com",
+  "oAuthClientId": "",
   "recaptchaSiteKey": ""
 }

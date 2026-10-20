@@ -35,6 +35,15 @@
         "isTeacher": {
           "type": "boolean",
           "description": "Penanda jika hasil kuis berasal dari uji coba akun guru"
+        },
+        "duration": {
+          "type": "number",
+          "description": "Durasi pengerjaan kuis dalam detik untuk tie-breaker"
+        },
+        "formattedDuration": {
+          "type": "string",
+          "description": "Format durasi pengerjaan (misal 01:25)",
+          "maxLength": 60
         }
       },
       "required": ["nama", "waktu", "skor", "jumlahBenar", "jumlahSalah"]
