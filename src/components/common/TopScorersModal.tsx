@@ -34,10 +34,16 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
   const [filterMode, setFilterMode] = useState<'highest' | 'all'>('highest');
 
   const loadData = (mode: 'highest' | 'all' = filterMode) => {
-    const data = getTop5FromHistoriEnergi(mode);
-    setTop5(data.students);
-    setTotalRecords(data.totalRecords);
-    setActiveStudent(getActiveStudentName());
+    try {
+      const data = getTop5FromHistoriEnergi(mode);
+      setTop5(Array.isArray(data?.students) ? data.students : []);
+      setTotalRecords(typeof data?.totalRecords === 'number' ? data.totalRecords : 0);
+      setActiveStudent(getActiveStudentName() || '');
+    } catch (err) {
+      console.warn('Kendala pembacaan data papan juara:', err);
+      setTop5([]);
+      setTotalRecords(0);
+    }
   };
 
   useEffect(() => {
@@ -75,10 +81,10 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
     loadData();
   };
 
-  // Find ranks for podium
-  const rank1 = top5.find((s) => s.rank === 1);
-  const rank2 = top5.find((s) => s.rank === 2);
-  const rank3 = top5.find((s) => s.rank === 3);
+  // Find ranks for podium safely
+  const rank1 = (top5 || []).find((s) => s?.rank === 1);
+  const rank2 = (top5 || []).find((s) => s?.rank === 2);
+  const rank3 = (top5 || []).find((s) => s?.rank === 3);
 
   return createPortal(
     <div
@@ -250,19 +256,19 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
                       <>
                         <div className="relative mb-1">
                           <span className="text-2xl sm:text-3xl filter drop-shadow">
-                            {rank2.avatarEmoji}
+                            {rank2?.avatarEmoji || '⭐'}
                           </span>
                           <span className="absolute -top-1 -right-1 text-base">
                             🥈
                           </span>
                         </div>
-                        <p className="font-black text-xs sm:text-sm text-slate-800 truncate max-w-[85px] sm:max-w-[110px]" title={rank2.nama}>
-                          {rank2.nama}
+                        <p className="font-black text-xs sm:text-sm text-slate-800 truncate max-w-[85px] sm:max-w-[110px]" title={rank2?.nama || '-'}>
+                          {rank2?.nama || '-'}
                         </p>
                         <span className="text-[11px] font-extrabold text-slate-700 bg-slate-200/80 px-2 py-0.5 rounded-md mt-0.5">
-                          {rank2.skor} Poin
+                          {rank2?.skor ?? 0} Poin
                         </span>
-                        {rank2.formattedDuration && (
+                        {rank2?.formattedDuration && (
                           <span className="text-[9px] font-bold text-slate-600 bg-white/90 border border-slate-200 px-1.5 py-0.2 rounded mt-0.5 shadow-2xs">
                             ⏱️ {rank2.formattedDuration}
                           </span>
@@ -286,19 +292,19 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
                         <div className="relative mb-1">
                           <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 absolute -top-4 left-1/2 -translate-x-1/2 animate-pulse" />
                           <span className="text-3xl sm:text-4xl filter drop-shadow">
-                            {rank1.avatarEmoji}
+                            {rank1?.avatarEmoji || '👑'}
                           </span>
                           <span className="absolute -bottom-1 -right-1 text-lg">
                             🥇
                           </span>
                         </div>
-                        <p className="font-black text-xs sm:text-sm text-amber-950 truncate max-w-[95px] sm:max-w-[120px]" title={rank1.nama}>
-                          {rank1.nama}
+                        <p className="font-black text-xs sm:text-sm text-amber-950 truncate max-w-[95px] sm:max-w-[120px]" title={rank1?.nama || '-'}>
+                          {rank1?.nama || '-'}
                         </p>
                         <span className="text-[11px] font-black text-amber-900 bg-amber-200 px-2 py-0.5 rounded-md mt-0.5 shadow-xs">
-                          {rank1.skor} Poin
+                          {rank1?.skor ?? 0} Poin
                         </span>
-                        {rank1.formattedDuration && (
+                        {rank1?.formattedDuration && (
                           <span className="text-[9px] font-black text-amber-950 bg-amber-100 border border-amber-300 px-1.5 py-0.2 rounded mt-0.5 shadow-2xs">
                             ⏱️ {rank1.formattedDuration}
                           </span>
@@ -321,19 +327,19 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
                       <>
                         <div className="relative mb-1">
                           <span className="text-2xl sm:text-3xl filter drop-shadow">
-                            {rank3.avatarEmoji}
+                            {rank3?.avatarEmoji || '⭐'}
                           </span>
                           <span className="absolute -top-1 -right-1 text-base">
                             🥉
                           </span>
                         </div>
-                        <p className="font-black text-xs sm:text-sm text-slate-800 truncate max-w-[85px] sm:max-w-[110px]" title={rank3.nama}>
-                          {rank3.nama}
+                        <p className="font-black text-xs sm:text-sm text-slate-800 truncate max-w-[85px] sm:max-w-[110px]" title={rank3?.nama || '-'}>
+                          {rank3?.nama || '-'}
                         </p>
                         <span className="text-[11px] font-extrabold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md mt-0.5">
-                          {rank3.skor} Poin
+                          {rank3?.skor ?? 0} Poin
                         </span>
-                        {rank3.formattedDuration && (
+                        {rank3?.formattedDuration && (
                           <span className="text-[9px] font-bold text-amber-900 bg-white/90 border border-orange-200 px-1.5 py-0.2 rounded mt-0.5 shadow-2xs">
                             ⏱️ {rank3.formattedDuration}
                           </span>
@@ -359,9 +365,11 @@ export const TopScorersModal: React.FC<TopScorersModalProps> = ({
                   <span>Nilai Maksimal: 100</span>
                 </div>
 
-                {top5.map((student) => {
+                {(top5 || []).map((student, idx) => {
+                  if (!student) return null;
                   const isCurrent =
                     activeStudent &&
+                    student?.nama &&
                     student.nama.toLowerCase() === activeStudent.toLowerCase();
 
                   // Medal UI specifics

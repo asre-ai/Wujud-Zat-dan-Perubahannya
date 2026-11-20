@@ -229,7 +229,7 @@ export function saveQuizResult(data: {
 
     // 3. Sinkronisasikan secara Real-Time ke Cloud Firestore antar-gadget
     if (!isTeacher) {
-      saveQuizResultToCloud(newRecord).catch((e) => console.warn('Cloud sync error:', e));
+      saveQuizResultToCloud(newRecord).catch(() => {});
     }
 
     // Picu event storage agar pembaruan langsung sinkron ke seluruh UI

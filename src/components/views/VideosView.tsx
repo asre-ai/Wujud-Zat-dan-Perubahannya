@@ -60,19 +60,6 @@ export const VideosView: React.FC = () => {
             <p className="text-sm sm:text-base text-rose-50 font-medium max-w-2xl leading-relaxed">
               Koleksi video animasi sains pilihan untuk memperdalam pemahaman wujud zat (padat, cair, gas), peristiwa perubahan kalor, dan eksperimen laboratorium.
             </p>
-
-            {/* Badges / Stats */}
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-1 text-xs font-bold text-rose-100">
-              <span className="bg-red-700/50 backdrop-blur-xs px-3 py-1 rounded-xl border border-red-300/30">
-                🎬 {EDUCATIONAL_VIDEOS.length} Video Pilihan
-              </span>
-              <span className="bg-red-700/50 backdrop-blur-xs px-3 py-1 rounded-xl border border-red-300/30">
-                🎒 Kurikulum Merdeka IPAS SD
-              </span>
-              <span className="bg-emerald-600/60 backdrop-blur-xs text-emerald-100 px-3 py-1 rounded-xl border border-emerald-300/30">
-                ⚡ Mode Ringan (Bebas Lag & Hemat Kuota)
-              </span>
-            </div>
           </div>
         </div>
       </div>

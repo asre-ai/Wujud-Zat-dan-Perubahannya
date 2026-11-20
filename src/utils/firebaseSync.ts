@@ -133,18 +133,11 @@ export async function clearAllHistoryCloudAndLocal(): Promise<boolean> {
 }
 
 /**
- * Migrasi pembersihan satu kali otomatis sesuai instruksi user:
- * "restart saja riwayatnya karena ada nama nama yang lengket saat dibersihkan dan webnya dimuat ulang"
+ * Penjaga pembersihan riwayat: Dinonaktifkan untuk mencegah penghapusan data otomatis
+ * pada perangkat baru (fresh device). Pembersihan riwayat hanya dilakukan secara manual oleh Guru.
  */
 export function checkAndTriggerOneTimeRestart(): void {
-  try {
-    const RESTART_KEY = 'riwayat_bersih_total_v1';
-    if (localStorage.getItem(RESTART_KEY) !== 'true') {
-      console.log('🔄 Menjalankan one-time restart riwayat untuk membersihkan nama-nama yang tersangkut...');
-      localStorage.setItem(RESTART_KEY, 'true');
-      clearAllHistoryCloudAndLocal().catch(() => {});
-    }
-  } catch (e) {}
+  // Dinonaktifkan dengan aman agar tidak ada penghapusan data pada perangkat baru
 }
 
 /**
@@ -285,8 +278,16 @@ export async function saveQuizResultToCloud(record: QuizHistoryRecord): Promise<
 /**
  * Menggabungkan entri dari Cloud ke localStorage tanpa merusak data yang sudah ada (Append-Only)
  */
+/**
+ * Menggabungkan entri dari Cloud ke localStorage tanpa merusak data yang sudah ada (Append-Only)
+ * SAFETY GUARD: Menggunakan optional chaining dan penanganan objek null/undefined.
+ */
 function mergeCloudQuizResults(cloudRecords: any[]): void {
   try {
+    if (!Array.isArray(cloudRecords)) {
+      cloudRecords = [];
+    }
+
     const rawLocal = localStorage.getItem(QUIZ_STORAGE_KEY);
     let localList: QuizHistoryRecord[] = [];
     if (rawLocal) {
@@ -299,22 +300,42 @@ function mergeCloudQuizResults(cloudRecords: any[]): void {
     // Set untuk mendeteksi keunikan data (nama + waktu + nilaiAkhir)
     const seen = new Set<string>();
     localList.forEach((r) => {
-      seen.add(`${(r.nama || '').trim().toLowerCase()}_${r.waktu}_${r.nilaiAkhir}`);
+      if (r && typeof r === 'object') {
+        const name = String(r?.nama || '').trim().toLowerCase();
+        const time = String(r?.waktu || '').trim();
+        const score = typeof r?.nilaiAkhir === 'number' ? r.nilaiAkhir : 0;
+        seen.add(`${name}_${time}_${score}`);
+      }
     });
 
     let hasNew = false;
     cloudRecords.forEach((c) => {
-      const key = `${(c.nama || '').trim().toLowerCase()}_${c.waktu}_${c.skor ?? c.nilaiAkhir}`;
+      if (!c || typeof c !== 'object') return;
+
+      const cleanName = String(c?.nama || '').trim();
+      if (!cleanName || cleanName === 'Siswa Cilik' || isTeacherName(cleanName)) return;
+
+      const cleanTime = String(c?.waktu || '-').trim();
+      const rawScore = c?.skor != null ? c.skor : (c?.nilaiAkhir != null ? c.nilaiAkhir : 0);
+      const cleanScore = typeof rawScore === 'number' ? rawScore : (parseInt(String(rawScore), 10) || 0);
+
+      const key = `${cleanName.toLowerCase()}_${cleanTime}_${cleanScore}`;
       if (!seen.has(key)) {
         seen.add(key);
+
+        const jBenar = typeof c?.jumlahBenar === 'number' ? c.jumlahBenar : Math.round(cleanScore / 10);
+        const jSalah = typeof c?.jumlahSalah === 'number' ? c.jumlahSalah : (10 - Math.round(cleanScore / 10));
+        const dur = typeof c?.duration === 'number' ? Math.max(0, Math.round(c.duration)) : undefined;
+        const formattedDur = c?.formattedDuration ? String(c.formattedDuration).substring(0, 40) : undefined;
+
         localList.push({
-          nama: c.nama,
-          waktu: c.waktu,
-          jumlahBenar: c.jumlahBenar ?? Math.round((c.skor || 0) / 10),
-          jumlahSalah: c.jumlahSalah ?? (10 - Math.round((c.skor || 0) / 10)),
-          nilaiAkhir: c.skor ?? c.nilaiAkhir ?? 0,
-          duration: typeof c.duration === 'number' ? c.duration : undefined,
-          formattedDuration: c.formattedDuration,
+          nama: cleanName,
+          waktu: cleanTime,
+          jumlahBenar: jBenar,
+          jumlahSalah: jSalah,
+          nilaiAkhir: cleanScore,
+          duration: dur,
+          formattedDuration: formattedDur,
         });
         hasNew = true;
       }
@@ -336,22 +357,42 @@ function mergeCloudQuizResults(cloudRecords: any[]): void {
 
     const historiSeen = new Set<string>();
     historiList.forEach((h) => {
-      historiSeen.add(`${(h.nama || '').trim().toLowerCase()}_${h.waktu}_${h.skor}`);
+      if (h && typeof h === 'object') {
+        const name = String(h?.nama || '').trim().toLowerCase();
+        const time = String(h?.waktu || '').trim();
+        const score = typeof h?.skor === 'number' ? h.skor : 0;
+        historiSeen.add(`${name}_${time}_${score}`);
+      }
     });
 
     let historiUpdated = false;
     cloudRecords.forEach((c) => {
-      const hKey = `${(c.nama || '').trim().toLowerCase()}_${c.waktu}_${c.skor ?? c.nilaiAkhir}`;
+      if (!c || typeof c !== 'object') return;
+
+      const cleanName = String(c?.nama || '').trim();
+      if (!cleanName || cleanName === 'Siswa Cilik' || isTeacherName(cleanName)) return;
+
+      const cleanTime = String(c?.waktu || '-').trim();
+      const rawScore = c?.skor != null ? c.skor : (c?.nilaiAkhir != null ? c.nilaiAkhir : 0);
+      const cleanScore = typeof rawScore === 'number' ? rawScore : (parseInt(String(rawScore), 10) || 0);
+
+      const hKey = `${cleanName.toLowerCase()}_${cleanTime}_${cleanScore}`;
       if (!historiSeen.has(hKey)) {
         historiSeen.add(hKey);
+
+        const jBenar = typeof c?.jumlahBenar === 'number' ? c.jumlahBenar : Math.round(cleanScore / 10);
+        const jSalah = typeof c?.jumlahSalah === 'number' ? c.jumlahSalah : (10 - Math.round(cleanScore / 10));
+        const dur = typeof c?.duration === 'number' ? Math.max(0, Math.round(c.duration)) : undefined;
+        const formattedDur = c?.formattedDuration ? String(c.formattedDuration).substring(0, 40) : undefined;
+
         historiList.push({
-          nama: c.nama,
-          waktu: c.waktu,
-          skor: c.skor ?? c.nilaiAkhir ?? 0,
-          jumlahBenar: c.jumlahBenar ?? Math.round((c.skor || 0) / 10),
-          jumlahSalah: c.jumlahSalah ?? (10 - Math.round((c.skor || 0) / 10)),
-          duration: typeof c.duration === 'number' ? c.duration : undefined,
-          formattedDuration: c.formattedDuration,
+          nama: cleanName,
+          waktu: cleanTime,
+          skor: cleanScore,
+          jumlahBenar: jBenar,
+          jumlahSalah: jSalah,
+          duration: dur,
+          formattedDuration: formattedDur,
         });
         historiUpdated = true;
       }
@@ -369,15 +410,20 @@ function mergeCloudQuizResults(cloudRecords: any[]): void {
       }
     }
   } catch (err) {
-    console.error('Gagal menggabungkan data kuis dari cloud:', err);
+    console.warn('Kendala pemrosesan penggabungan data kuis:', err);
   }
 }
 
 /**
  * Menggabungkan entri sesi login dari Cloud ke histori_energi
+ * SAFETY GUARD: Menggunakan optional chaining dan penanganan objek null/undefined.
  */
 function mergeCloudStudentSessions(cloudSessions: any[]): void {
   try {
+    if (!Array.isArray(cloudSessions)) {
+      cloudSessions = [];
+    }
+
     const rawHistori = localStorage.getItem('histori_energi');
     let historiList: any[] = [];
     if (rawHistori) {
@@ -389,18 +435,30 @@ function mergeCloudStudentSessions(cloudSessions: any[]): void {
 
     const seen = new Set<string>();
     historiList.forEach((h) => {
-      seen.add(`${(h.nama || '').trim().toLowerCase()}_${h.waktu}`);
+      if (h && typeof h === 'object') {
+        const name = String(h?.nama || '').trim().toLowerCase();
+        const time = String(h?.waktu || '').trim();
+        seen.add(`${name}_${time}`);
+      }
     });
 
     let updated = false;
     cloudSessions.forEach((s) => {
-      const key = `${(s.nama || '').trim().toLowerCase()}_${s.waktu}`;
+      if (!s || typeof s !== 'object') return;
+
+      const cleanName = String(s?.nama || '').trim();
+      if (!cleanName || cleanName === 'Siswa Cilik' || isTeacherName(cleanName)) return;
+
+      const cleanTime = String(s?.waktu || '-').trim();
+      const key = `${cleanName.toLowerCase()}_${cleanTime}`;
       if (!seen.has(key)) {
         seen.add(key);
+        const score = typeof s?.skor === 'number' ? s.skor : (parseInt(String(s?.skor || 0), 10) || 0);
+
         historiList.push({
-          nama: s.nama,
-          waktu: s.waktu,
-          skor: s.skor ?? 0,
+          nama: cleanName,
+          waktu: cleanTime,
+          skor: score,
         });
         updated = true;
       }
@@ -415,7 +473,7 @@ function mergeCloudStudentSessions(cloudSessions: any[]): void {
       }
     }
   } catch (err) {
-    console.error('Gagal menggabungkan sesi login dari cloud:', err);
+    console.warn('Kendala pemrosesan sesi siswa:', err);
   }
 }
 
@@ -423,6 +481,8 @@ let syncInitialized = false;
 
 /**
  * Memulai Sinkronisasi Realtime Firebase Firestore Antar-Gadget (HP, Laptop, Tablet)
+ * HANDLER DATABASE KOSONG & FRESH DEVICE: Menangani snapshot kosong (snapshot.empty) secara aman
+ * tanpa melempar error unhandled rejection atau crash pada UI.
  */
 export function startFirebaseRealtimeSync(): () => void {
   if (syncInitialized) {
@@ -432,22 +492,29 @@ export function startFirebaseRealtimeSync(): () => void {
 
   console.log('☁️ Memulai Sinkronisasi Real-Time Cloud Firestore untuk Hasil Belajar Siswa...');
 
-  // Jalankan pembersihan awal jika ada sisa data lama yang tersangkut (one-time restart)
-  checkAndTriggerOneTimeRestart();
-
   // 1. Dengarkan pembaruan real-time hasil kuis
   const unsubQuiz = onSnapshot(
     collection(db, QUIZ_RESULTS_PATH),
     (snapshot) => {
-      const items: any[] = [];
-      snapshot.forEach((d) => items.push(d.data()));
-      mergeCloudQuizResults(items);
+      try {
+        if (!snapshot || snapshot.empty) {
+          mergeCloudQuizResults([]);
+          return;
+        }
+        const items: any[] = [];
+        snapshot.forEach((d) => {
+          const data = d?.data?.();
+          if (data && typeof data === 'object') {
+            items.push(data);
+          }
+        });
+        mergeCloudQuizResults(items);
+      } catch (snapErr) {
+        console.warn('Kendala pemrosesan snapshot hasil kuis:', snapErr);
+      }
     },
     (error) => {
-      console.warn('Gagal langganan real-time hasil kuis:', error.message);
-      try {
-        handleFirestoreError(error, OperationType.GET, QUIZ_RESULTS_PATH);
-      } catch {}
+      console.warn('ℹ️ Real-time cloud hasil kuis beralih ke mode lokal:', error?.message || error);
     }
   );
 
@@ -455,15 +522,25 @@ export function startFirebaseRealtimeSync(): () => void {
   const unsubSessions = onSnapshot(
     collection(db, STUDENT_SESSIONS_PATH),
     (snapshot) => {
-      const items: any[] = [];
-      snapshot.forEach((d) => items.push(d.data()));
-      mergeCloudStudentSessions(items);
+      try {
+        if (!snapshot || snapshot.empty) {
+          mergeCloudStudentSessions([]);
+          return;
+        }
+        const items: any[] = [];
+        snapshot.forEach((d) => {
+          const data = d?.data?.();
+          if (data && typeof data === 'object') {
+            items.push(data);
+          }
+        });
+        mergeCloudStudentSessions(items);
+      } catch (snapErr) {
+        console.warn('Kendala pemrosesan snapshot sesi siswa:', snapErr);
+      }
     },
     (error) => {
-      console.warn('Gagal langganan real-time sesi siswa:', error.message);
-      try {
-        handleFirestoreError(error, OperationType.GET, STUDENT_SESSIONS_PATH);
-      } catch {}
+      console.warn('ℹ️ Real-time cloud sesi siswa beralih ke mode lokal:', error?.message || error);
     }
   );
 

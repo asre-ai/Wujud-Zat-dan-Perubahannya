@@ -1427,7 +1427,7 @@
 
           if (statTotal) statTotal.textContent = list.length.toString() + (currentAdminFilter === 'highest' ? ' Siswa' : ' Rekam');
           if (statAvg) statAvg.textContent = Math.round(totalSkor / list.length).toString();
-          if (statLast) statLast.textContent = list[list.length - 1].nama || '-';
+          if (statLast) statLast.textContent = (list[list.length - 1] && list[list.length - 1].nama) || '-';
         }
 
         // Ekspos fungsi renderAdminTable dan dengarkan pembaruan real-time dari Firestore
